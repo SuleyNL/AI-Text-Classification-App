@@ -4,17 +4,17 @@
 		{
 			"document_id": 1234,
 			"document_name": "Test",
-			"html": "3 zinnen met <span class='cat1 cat6'> span </span> om de hoofd-zin"
+			"html": "3 zinnen met <span class='cat cat1 cat6'> span </span> om de hoofd-zin"
 		},
     {
 			"document_id": 1234,
 			"document_name": "Test",
-			"html": "3 zinnen met <span class='cat1 cat6'> span </span> om de hoofd-zin"
+			"html": "3 zinnen met <span class='cat cat1 cat6'> span </span> om de hoofd-zin"
 		},
     {
 			"document_id": 1235,
 			"document_name": "Test2",
-			"html": "3 zinnen met <span class='cat1 cat6'> span </span> om de hoofd-zin"
+			"html": "3 zinnen met <span class='cat cat2 cat3'> span </span> om de hoofd-zin"
 		}
 	]
 }

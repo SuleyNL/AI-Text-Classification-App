@@ -363,16 +363,55 @@ def get_categories_person(person_id):
 
 
 # snippets.json (frontend)
-@app.route('categories/<int:person_id>/<int:category_id>', methods=['GET'])
-def get_categories_person(person_id, category_id):
-    # Format the result
-    result = []
-    for category_id, count in category_counts.items():
-        result.append({
-            "id": category_id,
-            "name": solution.categories[category_id - 1]["name"],  # Mapping the category ID to name
-            "numberOfLinkedSnippets": count
-        })
+@app.route('/categories/<int:person_id>/<int:category_id>', methods=['GET'])
+def get_snippets_person(person_id, category_id):
+    def extract_relevant_snippets(html_string, category_id):
+        soup = BeautifulSoup(html_string, 'html.parser')
+        spans = soup.find_all('span')
+        snippets = []
+
+        for i, span in enumerate(spans):
+            if 'class' in span.attrs:
+                classes = span.attrs['class']
+                if f'cat{category_id}' in classes:
+                    snippet = ""
+                    # Get the previous span if exists
+                    if i > 0:
+                        snippet += str(spans[i - 1])
+                    # Get the current span
+                    snippet += str(span)
+                    # Get the next span if exists
+                    if i < len(spans) - 1:
+                        snippet += str(spans[i + 1])
+                    snippets.append(snippet)
+
+        return snippets
+
+    db = get_db()
+    person = db.query(Person).filter(Person.person_id == person_id).first()
+
+    if person is None:
+        return jsonify({"error": "Person not found"}), 404
+
+    snippets = []
+
+    # Fetch associated documents through the PersonDoc association
+    associated_docs = db.query(Doc).join(PersonDoc).filter(PersonDoc.person_id == person_id).all()
+
+    for doc in associated_docs:
+        relevant_snippets = extract_relevant_snippets(doc.doc_text_html, category_id)
+        for snippet in relevant_snippets:
+            snippets.append({
+                "document_id": doc.doc_id,
+                "document_name": doc.doc_name,
+                "html": snippet
+            })
+
+    result = {
+        "category": category_id,
+        "snippets": snippets
+    }
+
     return jsonify(result)
 
 
