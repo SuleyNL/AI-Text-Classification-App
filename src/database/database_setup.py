@@ -253,7 +253,7 @@ def get_doc(doc_id):
     })
 
 
-@app.route('/persons/<int:person_id>/docs', methods=['GET'])
+@app.route('/persons/<int:person_id>/docs/test', methods=['GET'])
 def get_person_docs(person_id):
     db = get_db()
     person = db.query(Person).filter(Person.person_id == person_id).first()
@@ -351,7 +351,7 @@ create_label_categories()
 
 
 # LABELS
-@app.route('/persons/<int:person_id>/categories', methods=['GET'])
+@app.route('/categories/<int:person_id>', methods=['GET'])
 def get_person_docs(person_id):
     db = get_db()
     person = db.query(Person).filter(Person.person_id == person_id).first()
@@ -363,7 +363,6 @@ def get_person_docs(person_id):
         "created_at": d.doc.created_at.isoformat() if d.doc.created_at else None,
         "doc_text_html": d.doc_text_html
     } for d in person.docs])
-
 
 
 if __name__ == "__main__":

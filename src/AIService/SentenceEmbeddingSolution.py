@@ -107,8 +107,11 @@ class SentenceEmbeddingSolution(AI_solution):
             #relevant_categories = self.get_relevant_themes(sentence)
 
             if relevant_categories:
+                # TODO: should be cat cat1 cat2 cat3
                 category_classes = ' '.join([category.lower().replace(' ', '_') for category in relevant_categories])
-                doc_html.append(f'<span class="cat {category_classes}">{sentence}</span>')
+                category_classes_frontend = ' '.join([('cat' + self.categories[category]['id']) for category in relevant_categories])
+
+                doc_html.append(f'<span class="cat {category_classes_frontend}">{sentence}</span>')
             else:
                 doc_html.append(f'<span>{sentence}</span>')
 
@@ -117,7 +120,7 @@ class SentenceEmbeddingSolution(AI_solution):
             #print(f"Relevant categories: {relevant_categories}")
 
             #doc_html.append(f"<span class=\"sociaal_netwerk financien\">{sentence}</span>")
-            doc_html.append(f'<span class="{category_classes}">{sentence}</span>')
+            #doc_html.append(f'<span class="{category_classes}">{sentence}</span>')
 
             print(f"{sentence} stored in db with metadata filename: {filename} and person_id: {person_id}")
 
