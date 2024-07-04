@@ -8,7 +8,8 @@ import { Observable, catchError, tap, throwError, map } from "rxjs";
 })
 export class DocumentService {
   private categoriesUrl = 'api/documents/categories.json';
-  private documentsUrl = 'api/documents/documents.json';
+  private snippetsUrl = 'api/documents/snippets.json';
+  private documentUrl = 'api/documents/single_document.json';
 
   constructor(private http: HttpClient) { }
 
@@ -25,28 +26,28 @@ export class DocumentService {
 	// GET request to fetch all snippets linked to person id and category id
 	// Query variable: person id, category id
 	getSnippets(): Observable<any> {
-		return this.http.get(this.documentsUrl)
+		return this.http.get(this.snippetsUrl)
     .pipe(
 			tap(data => console.log('All', JSON.stringify(data))),
 			catchError(this.handleError)
 		);
 	}
 
-  getDocuments(): Observable<any> {
-		return this.http.get(this.documentsUrl)
+  getDocument(): Observable<any> {
+		return this.http.get(this.documentUrl)
     .pipe(
 			tap(data => console.log('All', JSON.stringify(data))),
 			catchError(this.handleError)
 		);
 	}
 
-  getDocument(id: number): Observable<any | undefined> {
-		return this.getDocuments()
-		  .pipe(
-      // tap(data => console.log('All', JSON.stringify(data))),
-			map((documents: any) => documents.find((item: { id: number; }) => item.id === id))
-		  );
-	  }
+  // getDocument(id: number): Observable<any | undefined> {
+	// 	return this.getDocuments()
+	// 	  .pipe(
+  //     // tap(data => console.log('All', JSON.stringify(data))),
+	// 		map((documents: any) => documents.find((item: { id: number; }) => item.id === id))
+	// 	  );
+	//   }
 
   private handleError(err: HttpErrorResponse) {
 		let errorMessage = '';
