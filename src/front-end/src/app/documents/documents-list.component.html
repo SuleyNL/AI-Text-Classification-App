@@ -1,0 +1,14 @@
+<div>
+  <h1>Snippets</h1>
+  <div class="grid">
+    <div *ngFor="let doc of snippets.snippets" class="grid-item">
+      <span class="doc-id">#{{ doc.document_id }}</span>
+      <a
+        [routerLink]="['/document', doc.document_id]"
+        routerLinkActive="active"
+        [innerHTML]="doc.html"
+      >
+      </a>
+    </div>
+  </div>
+</div>

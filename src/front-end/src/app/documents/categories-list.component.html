@@ -1,0 +1,10 @@
+<div>
+  <h1>Categories</h1>
+  <div class="grid">
+    <div *ngFor="let cat of categories" class="grid-item">
+      <a [routerLink]="['/category', cat.id]" routerLinkActive="active"
+        >{{ cat.name }} ({{ cat.numberOfLinkedSnippets }})
+      </a>
+    </div>
+  </div>
+</div>

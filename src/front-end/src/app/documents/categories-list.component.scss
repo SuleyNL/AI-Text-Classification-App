@@ -1,0 +1,27 @@
+span {
+  color: red;
+  font-weight: bold;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 600px;
+
+  .grid-item {
+    height: 100px;
+    background-color: #fafafa;
+    padding-left: 1rem;
+
+    a {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    &:hover {
+      background-color: #ddded7;
+    }
+  }
+}
