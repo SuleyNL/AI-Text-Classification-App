@@ -7,9 +7,9 @@ import { Observable, catchError, tap, throwError, map } from "rxjs";
   providedIn: 'root'
 })
 export class DocumentService {
-  private categoriesUrl = 'api/documents/categories.json';
-  private snippetsUrl = 'api/documents/snippets.json';
-  private documentUrl = 'api/documents/single_document.json';
+  private categoriesUrl = 'http://127.0.0.1:8001/persons/<string:person_id>/categories';
+  private snippetsUrl = 'http://127.0.0.1:8001/persons/<int:person_id>/<int:category_id>';
+  private documentUrl = 'http://127.0.0.1:8001/docs/<string:doc_id>';
 
   constructor(private http: HttpClient) { }
 
