@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  ollama_nogpu:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    command: ollama run llama3
+    networks:
+      - ATCA
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    command: ["ollama", "run", "llama3"]
+    networks:
+      - ATCA
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      runtime: nvidia
+
+  ollama_v2:
+    image: ollama/ollama
+    container_name: ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - ATCA
+    command: >
+      "run llama3"
+  poc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - ollama
+    networks:
+      - ATCA
+
+networks:
+  ATCA:
+    driver: bridge
+
+volumes:
+  ollama:

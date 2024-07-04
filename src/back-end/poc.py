@@ -14,7 +14,7 @@ documents = [
 ]
 
 client = chromadb.Client()
-collection = client.create_collection(name="docs")
+collection = client.get_collection(name="docs")
 
 # store each document in a vector embedding database
 for i, d in enumerate(documents):
@@ -39,44 +39,3 @@ results = collection.query(
   query_embeddings=[response["embedding"]],
   n_results=1
 )
-data = results['documents'][0][0]
-
-
-
-i = 0
-while i < 5:
-    print("hello world")
-
-    # URL van de andere container's endpoint
-    url = "http://ollama:11434/api/chat"
-    #url = "http://localhost:11434/api/chat" without docker
-
-
-    # Het bericht dat we willen versturen
-    data = {
-        "model": "llama3",
-        "messages": [
-            {"role": "user", "content": "why is the sky blue?"}
-        ]
-    }
-
-    try:
-        # Send the initial request
-        response = requests.post(url, json=data, stream=True)
-
-        # Process each JSON response
-        for line in response.iter_lines():
-            if line:
-                # Parse the JSON response
-                json_data = line.decode('utf-8')
-                parsed_data = json.loads(json_data)
-
-                # Extract and print the content
-                content = parsed_data['message']['content']
-                print(content)
-
-    except Exception as e:
-        print("An error occurred:", e)
-
-    i += 1
-    time.sleep(3)

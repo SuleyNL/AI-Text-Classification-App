@@ -1,0 +1,154 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Huisvesting",
+      "wordCloud": [
+        "Huis",
+        "Appartement",
+        "Woning",
+        "Huur",
+        "Koop",
+        "Hypotheek",
+        "Verhuurder",
+        "Eigenwoning",
+        "Thuis",
+        "Woonlasten",
+        "Verhuizen",
+        "Alleenstaand",
+        "Slaapkamer",
+        "Wijk",
+        "Buurt",
+        "Sociale huur",
+        "Vrije sector"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Dagbesteding",
+      "wordCloud": [
+        "Werk",
+        "Hobby",
+        "Vrije tijd",
+        "Sport",
+        "Ontspanning",
+        "Cursus",
+        "Vrijwilligerswerk",
+        "Buitenshuis",
+        "Vakantie"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Financien",
+      "wordCloud": [
+        "Geld",
+        "Inkomsten",
+        "Uitgaven",
+        "Sparen",
+        "Budget",
+        "Schulden",
+        "Lening",
+        "Hypotheek",
+        "Bank",
+        "Rekening",
+        "Investeren",
+        "Spaarrekening",
+        "Bekostingsplan",
+        "Incassobureau",
+        "Faillissement",
+        "Toeslag",
+        "Uitkering",
+        "Studielening"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Relatie partner gezin en familie",
+      "wordCloud": [
+        "Partner",
+        "Gezin",
+        "Ouders",
+        "Kinderen",
+        "Vriend",
+        "Vriendin",
+        "Relatie",
+        "Samenwonen",
+        "Huwelijk",
+        "Scheiding",
+        "Communicatie",
+        "Vertrouwen",
+        "Ondersteuning",
+        "Eenoudergezin",
+        "Alleenstaand",
+        "Familie"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Sociaal netwerk",
+      "wordCloud": [
+        "Vrienden",
+        "Familie",
+        "Collega's",
+        "Buren",
+        "Kenissen",
+        "Club",
+        "Vereniging",
+        "Sociaal contact",
+        "Eenzaamheid",
+        "Sociaal Netwerk",
+        "Communicatie"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Middelengebruik en verslaving",
+      "wordCloud": [
+        "Alcohol",
+        "Drugs",
+        "Medicijnen",
+        "Gokken",
+        "Gamen",
+        "Verslaving",
+        "Afkicken",
+        "Controleverlies",
+        "Therapie"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Psychosociaal functioneren",
+      "wordCloud": [
+        "Stress",
+        "Angst",
+        "Depressie",
+        "Geluk",
+        "Welzijn",
+        "Zelfvertrouwen",
+        "Piekeren",
+        "Slaapproblemen",
+        "Ontspanning",
+        "Coping",
+        "Veerkracht"
+        ]
+      },
+    {
+      "id": 8,
+      "name": "Houding",
+      "wordCloud": [
+        "Positief",
+        "Negatief",
+        "Realistisch",
+        "Optimistisch",
+        "Pessimistisch",
+        "Controle",
+        "Acceptatie",
+        "Uitdaging",
+        "Probleemoplossend",
+        "Doelen",
+        "Motivatie"
+      ]
+    }
+  ]
+}
