@@ -1,14 +1,14 @@
-
-Doc2vec where each doc is a sentence.
+# Generated ideas and insights
+## Doc2vec where each doc is a sentence.
 
 This implementation of Doc2vec can have an  additional tag-vector for each of the themes. 
 And then we can check the similarity of every unique document (sentence) to every tag,
 https://medium.com/wisio/a-gentle-introduction-to-doc2vec-db3e8c0cce5e
 
-> a dutch doc2vec would be needed, as its performance is expected to drop when using unknown words for its language
+> a specifically *dutch* doc2vec would be needed, as its performance is expected to drop when using unknown words for its language
 
 
-## For storage
+## Efficient storage
 Matryoshka embeddings can reduce the dimensionality of an embedding while containing most of its semantic meaning
 This can be finetuned to our specific use-case.
 

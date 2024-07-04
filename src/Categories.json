@@ -28,6 +28,8 @@
       "name": "Dagbesteding",
       "wordCloud": [
         "Werk",
+        "Studie",
+        "Studeert",
         "Hobby",
         "Vrije tijd",
         "Sport",
@@ -57,6 +59,7 @@
         "Bekostingsplan",
         "Incassobureau",
         "Faillissement",
+        "Bankrupt",
         "Toeslag",
         "Uitkering",
         "Studielening"
@@ -73,7 +76,6 @@
         "Vriend",
         "Vriendin",
         "Relatie",
-        "Samenwonen",
         "Huwelijk",
         "Scheiding",
         "Communicatie",

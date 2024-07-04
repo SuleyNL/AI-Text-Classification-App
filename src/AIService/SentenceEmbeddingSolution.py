@@ -15,15 +15,15 @@ class SentenceEmbeddingSolution(AI_solution):
     category_embeddings: Dict
 
     def __init__(self, similarity_threshold=0.65):
-        super().__init__()
+        super().__init__()  # pre-fills categories
+        self.theme_embedder = EmbeddingFunctions.ThemeEmbedder(self.categories)
         self.client = chromadb.Client()
-        self.client.reset()
         self.collection = self.client.create_collection(
             name="docs",
             metadata={"hnsw:space": "cosine"},
-            # ^^ options for hnsw:space are "l2", "cosine", and "ip".
+            # ^^ options for "hnsw:space" are "l2", "cosine", and "ip".
             # See: https://docs.trychroma.com/guides#changing-the-distance-function for more info.
-            embedding_function=EmbeddingFunctions.Mxbai
+            #embedding_function=EmbeddingFunctions.Mxbai
         )
         self.category_embeddings = self.embed_categories()
         self.similarity_threshold = similarity_threshold
@@ -36,6 +36,23 @@ class SentenceEmbeddingSolution(AI_solution):
             embedding = response["embedding"]
             category_embeddings[category['name']] = embedding
         return category_embeddings
+
+    def get_relevant_themes(self, sentence: str):
+        sentence_embedding = self.theme_embedder.get_sentence_embedding(sentence)
+        similarities = self.theme_embedder.get_theme_similarities(sentence_embedding)
+
+        relevant_themes = []
+        print(f"Sentence: {sentence}")
+        print("Theme similarities:")
+        for theme, similarity in similarities.items():
+            print(f"  {theme}: {similarity:.4f}")
+            if similarity >= self.similarity_threshold:
+                relevant_themes.append(theme)
+
+        print(f"Relevant themes: {relevant_themes}")
+        print("-" * 50)
+
+        return relevant_themes
 
     def get_relevant_categories(self, sentence, sentence_embedding):
         relevant_categories = []
@@ -87,6 +104,8 @@ class SentenceEmbeddingSolution(AI_solution):
 
             # Get relevant categories based on cosine similarity with the wordcloud of the category
             relevant_categories = self.get_relevant_categories(sentence, embedding)
+            #relevant_categories = self.get_relevant_themes(sentence)
+
             if relevant_categories:
                 category_classes = ' '.join([category.lower().replace(' ', '_') for category in relevant_categories])
                 doc_html.append(f'<span class="cat {category_classes}">{sentence}</span>')
