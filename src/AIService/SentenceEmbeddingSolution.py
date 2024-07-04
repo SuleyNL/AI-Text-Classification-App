@@ -73,6 +73,12 @@ class SentenceEmbeddingSolution(AI_solution):
 
         return relevant_categories
 
+    def get_category_id_by_name(self, name: str) -> int:
+        for category in self.categories:
+            if category["name"] == name:
+                return category["id"]
+        return None
+
     def process_document(self, filepath: str, filename: str, person_id: str) -> str:
         # Extract text from PDF
         reader = PdfReader(filepath)
@@ -109,9 +115,9 @@ class SentenceEmbeddingSolution(AI_solution):
             if relevant_categories:
                 # TODO: should be cat cat1 cat2 cat3
                 category_classes = ' '.join([category.lower().replace(' ', '_') for category in relevant_categories])
-                category_classes_frontend = ' '.join([('cat' + self.categories[category]['id']) for category in relevant_categories])
+                category_classes_frontend = ' '.join([('cat' + str(self.get_category_id_by_name(category))) for category in relevant_categories])
 
-                doc_html.append(f'<span class="cat {category_classes_frontend}">{sentence}</span>')
+                doc_html.append(f'<span class=\"cat {category_classes_frontend}\">{sentence}</span>')
             else:
                 doc_html.append(f'<span>{sentence}</span>')
 

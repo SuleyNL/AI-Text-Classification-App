@@ -14,7 +14,7 @@ class Mxbai(EmbeddingFunction):
 
 
 class ThemeEmbedder:
-    def __init__(self, themes: List[Dict[str, List[str]]], alpha: float = 0.5):
+    def __init__(self, themes: List[Dict[str, List[str]]], alpha: float = 0.51):
         self.themes = themes
         self.theme_embeddings = self._create_theme_embeddings()
         self.transformation_matrices = self._create_transformation_matrices(alpha)
@@ -47,7 +47,7 @@ class ThemeEmbedder:
         return transformation_matrices
 
     def _create_negative_embedding(self):
-        negative_words = ["the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for"]
+        negative_words = ["de", "het", "tafel", "bord", "automaat", "laptop", "plastic", "whiteboard", "naar", "over", "rapport", "verklaring"]
         negative_embeddings = [self._get_embedding(word) for word in negative_words]
         return np.mean(negative_embeddings, axis=0)
 
@@ -56,7 +56,7 @@ class ThemeEmbedder:
         return np.array(response["embedding"])
 
     def get_sentence_embedding(self, sentence: str):
-        return self._get_embedding(sentence)  # - self.negative_embedding #TODO: For later experimentation
+        return self._get_embedding(sentence) # - self.negative_embedding #TODO: For later experimentation
 
     def get_theme_similarities(self, sentence_embedding: np.ndarray):
         similarities = {}

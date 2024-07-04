@@ -3,6 +3,8 @@ import json
 import os
 from typing import List, Dict, Any
 
+from bs4 import BeautifulSoup
+
 
 class AI_solution(abc.ABC):
 
@@ -44,3 +46,27 @@ class AI_solution(abc.ABC):
             if os.path.exists(filepath):
                 os.remove(filepath)
                 pass
+
+    def extract_unique_categories(self, html_string:str):
+        # Parse the HTML string with BeautifulSoup
+        soup = BeautifulSoup(html_string, 'html.parser')
+
+        # Initialize a set to store unique categories
+        unique_categories = set()
+
+        # Find all <span> tags
+        spans = soup.find_all('span')
+
+        # Iterate through each span tag
+        for span in spans:
+            # Get the classes of the span tag
+            if 'class' in span.attrs:
+                classes = span.attrs['class']
+                for cls in classes:
+                    if cls.startswith('cat'):
+                        val = (cls.replace('cat', ''))
+                        if val:
+                            unique_categories.add(int(val))
+
+        return list(unique_categories)
+

@@ -3,6 +3,7 @@ import os
 import uuid
 from urllib.parse import parse_qsl
 
+from bs4 import BeautifulSoup
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
@@ -240,6 +241,7 @@ def get_docs():
     } for d in docs])
 
 
+# single_document.json
 @app.route('/docs/<string:doc_id>', methods=['GET'])
 def get_doc(doc_id):
     db = get_db()
@@ -247,10 +249,11 @@ def get_doc(doc_id):
     if doc is None:
         return jsonify({"error": "Document not found"}), 404
     return jsonify({
-        "doc_id": doc.doc_id,
-        "doc_name": doc.doc_name,
+        "id": doc.doc_id,
+        "name": doc.doc_name,
+        "category": solution.extract_unique_categories(doc.doc_text_html),
+        "html": doc.doc_text_html,
         "created_at": doc.created_at.isoformat() if doc.created_at else None,
-        "doc_text_html": doc.doc_text_html
     })
 
 
@@ -308,19 +311,69 @@ def get_label_categories():
 
 
 # LABELS
-@app.route('/chah/<int:person_id>', methods=['GET'])
-def get_chah(person_id):
+# categories.json (frontend)
+@app.route('/categories/<string:person_id>', methods=['GET'])
+def get_categories_person(person_id):
+    def count_categories(html_string):
+        soup = BeautifulSoup(html_string, 'html.parser')
+        category_counts = {}
+        spans = soup.find_all('span')
+        for span in spans:
+            if 'class' in span.attrs:
+                classes = span.attrs['class']
+                for cls in classes:
+                    if cls.startswith('cat') and cls[3:].isdigit():
+                        print('cls: ' + cls)
+                        category_id = int(cls[3:])  # remove 'cat'
+                        if category_id != '':
+                            if category_id in category_counts:
+                                category_counts[category_id] += 1
+                            else:
+                                category_counts[category_id] = 1
+        return category_counts
+
     db = get_db()
     person = db.query(Person).filter(Person.person_id == person_id).first()
+
     if person is None:
         return jsonify({"error": "Person not found"}), 404
-    return jsonify([{
-        "doc_id": d.doc.doc_id,
-        "doc_name": d.doc.doc_name,
-        "created_at": d.doc.created_at.isoformat() if d.doc.created_at else None,
-        "doc_text_html": d.doc_text_html
-    } for d in person.docs])
 
+    category_counts = {}
+
+    # Fetch associated documents through the PersonDoc association
+    associated_docs = db.query(Doc).join(PersonDoc).filter(PersonDoc.person_id == person_id).all()
+
+    for doc in associated_docs:
+        doc_category_counts = count_categories(doc.doc_text_html)
+        for category, count in doc_category_counts.items():
+            if category in category_counts:
+                category_counts[category] += count
+            else:
+                category_counts[category] = count
+
+    # Format the result
+    result = []
+    for category_id, count in category_counts.items():
+        result.append({
+            "id": category_id,
+            "name": solution.categories[category_id - 1]["name"],  # Mapping the category ID to name
+            "numberOfLinkedSnippets": count
+        })
+    return jsonify(result)
+
+
+# snippets.json (frontend)
+@app.route('categories/<int:person_id>/<int:category_id>', methods=['GET'])
+def get_categories_person(person_id, category_id):
+    # Format the result
+    result = []
+    for category_id, count in category_counts.items():
+        result.append({
+            "id": category_id,
+            "name": solution.categories[category_id - 1]["name"],  # Mapping the category ID to name
+            "numberOfLinkedSnippets": count
+        })
+    return jsonify(result)
 
 
 def create_label_categories():

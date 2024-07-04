@@ -56,6 +56,48 @@ While this approach doesn't require retraining the model, it does involve some c
 
 These operations are generally fast on modern hardware, especially if you use optimized linear algebra libraries.
 
-Remember, this is a theoretical approach. Its effectiveness would depend on the specific characteristics of your embedding model, themes, and data. You'd need to experiment and possibly adjust the method based on your results.
 
-Would you like me to elaborate on any part of this approach or discuss potential implementation details?
+> When applying this I ran into the issue of all embeddings' cosine similarity being 1.0. 
+> By changing the matrix multiplication I managed to multiply by 0.01 times the theme, 
+> which created for every sentence very cosine similar results
+___
+'Sentence: evenals de invloed van deze aandoeningen op zijn 
+impulscontrole en stressbeheersing. #### Getuigenverklaringen'  
+ 
+- **Jane Smith**
+Theme similarities:
+  - Huisvesting: 0.6479
+  - Dagbesteding: 0.6194
+  - Financien: 0.6352
+  - Relatie partner gezin en familie: 0.6245
+  - Sociaal netwerk: 0.6214
+  - Middelengebruik en verslaving: 0.6306
+  - Psychosociaal functioneren: 0.6558
+  - Houding: 0.6481
+
+Relevant themes: `['Psychosociaal functioneren']`
+___
+Sentence: '**Persoonlijke Situatie van John Doe**: John heeft verklaard dat de verhoogde stress op het werk en de druk thuis hebben 
+bijgedragen aan zijn reactieve gedrag op de avond van'
+
+Theme similarities:
+  - Huisvesting: 0.6849
+  - Dagbesteding: 0.6492
+  - Financien: 0.6678
+  - Relatie partner gezin en familie: 0.6643
+  - Sociaal netwerk: 0.6542
+  - Middelengebruik en verslaving: 0.6666
+  - Psychosociaal functioneren: 0.6957
+  - Houding: 0.6704
+Relevant themes: `['Huisvesting', 'Financien', 'Relatie partner gezin en familie', 'Sociaal netwerk', 'Middelengebruik en verslaving', 'Psychosociaal functioneren', 'Houding']`
+___
+A solution to this would be the use of more sophisticated transformation techniques:
+Instead of simple linear transformations, consider using non-linear transformations or more advanced techniques like:
+
+- Mahalanobis distance
+- Hyperbolic embeddings
+- Attention mechanisms
+
+Try alternatives to cosine similarity, such as 
+- Euclidean distance 
+- Jensen-Shannon divergence.
