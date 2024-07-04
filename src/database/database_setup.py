@@ -347,8 +347,23 @@ def create_label_categories():
         # Close the session
         session.close()
 
-
 create_label_categories()
+
+
+# LABELS
+@app.route('/persons/<int:person_id>/categories', methods=['GET'])
+def get_person_docs(person_id):
+    db = get_db()
+    person = db.query(Person).filter(Person.person_id == person_id).first()
+    if person is None:
+        return jsonify({"error": "Person not found"}), 404
+    return jsonify([{
+        "doc_id": d.doc.doc_id,
+        "doc_name": d.doc.doc_name,
+        "created_at": d.doc.created_at.isoformat() if d.doc.created_at else None,
+        "doc_text_html": d.doc_text_html
+    } for d in person.docs])
+
 
 
 if __name__ == "__main__":
