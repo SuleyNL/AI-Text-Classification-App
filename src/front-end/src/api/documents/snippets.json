@@ -3,6 +3,7 @@
 	"snippets": [
 		{
 			"document_id": 1234,
+			"document_name": "Test",
 			"html": "3 zinnen met <span class='cat1 cat6'> span </span> om de hoofd-zin"
 		}
 	]
