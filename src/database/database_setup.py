@@ -86,7 +86,8 @@ def get_db():
     db = SessionLocal()
     try:
         return db
-    finally:
+    except Exception as e:
+        print(e)
         db.close()
 
 
@@ -306,6 +307,22 @@ def get_label_categories():
     } for lc in label_categories])
 
 
+# LABELS
+@app.route('/chah/<int:person_id>', methods=['GET'])
+def get_chah(person_id):
+    db = get_db()
+    person = db.query(Person).filter(Person.person_id == person_id).first()
+    if person is None:
+        return jsonify({"error": "Person not found"}), 404
+    return jsonify([{
+        "doc_id": d.doc.doc_id,
+        "doc_name": d.doc.doc_name,
+        "created_at": d.doc.created_at.isoformat() if d.doc.created_at else None,
+        "doc_text_html": d.doc_text_html
+    } for d in person.docs])
+
+
+
 def create_label_categories():
     # Create a new database session
     session = SessionLocal()
@@ -347,23 +364,8 @@ def create_label_categories():
         # Close the session
         session.close()
 
+
 create_label_categories()
-
-
-# LABELS
-@app.route('/categories/<int:person_id>', methods=['GET'])
-def get_person_docs(person_id):
-    db = get_db()
-    person = db.query(Person).filter(Person.person_id == person_id).first()
-    if person is None:
-        return jsonify({"error": "Person not found"}), 404
-    return jsonify([{
-        "doc_id": d.doc.doc_id,
-        "doc_name": d.doc.doc_name,
-        "created_at": d.doc.created_at.isoformat() if d.doc.created_at else None,
-        "doc_text_html": d.doc_text_html
-    } for d in person.docs])
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8001, debug=True)
