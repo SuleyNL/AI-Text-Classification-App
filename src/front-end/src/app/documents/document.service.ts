@@ -7,8 +7,7 @@ import { Observable, catchError, tap, throwError, map } from "rxjs";
   providedIn: 'root'
 })
 export class DocumentService {
-	private hostname = location.hostname;
-	private port = 8001;
+	private host = `${location.hostname}:8001`;
   private categoriesUrl = 'persons/1/categories';
   private snippetsUrl = 'persons/1';
   private documentUrl = 'docs';
@@ -17,7 +16,7 @@ export class DocumentService {
   // GET request to fetch Categories linked to person id
   // Query variable: person id
   getCategories(): Observable<any> {
-		return this.http.get(`${this.hostname}${this.port}/${this.categoriesUrl}`)
+		return this.http.get(`${this.host}/${this.categoriesUrl}`)
 		.pipe(
 			tap(data => console.log('All', JSON.stringify(data))),
 			catchError(this.handleError)
@@ -27,7 +26,7 @@ export class DocumentService {
 	// GET request to fetch all snippets linked to person id and category id
 	// Query variable: person id, category id
 	getSnippets(cat_id: Number): Observable<any> {
-		return this.http.get(`${this.hostname}${this.port}/${this.snippetsUrl}/${cat_id}`)
+		return this.http.get(`${this.host}/${this.snippetsUrl}/${cat_id}`)
     .pipe(
 			tap(data => console.log('All', JSON.stringify(data))),
 			catchError(this.handleError)
@@ -35,7 +34,7 @@ export class DocumentService {
 	}
 
   getDocument(doc_id: Number): Observable<any> {
-		return this.http.get(`${this.hostname}${this.port}/${this.documentUrl}/${doc_id}`)
+		return this.http.get(`${this.host}/${this.documentUrl}/${doc_id}`)
     .pipe(
 			tap(data => console.log('All', JSON.stringify(data))),
 			catchError(this.handleError)
