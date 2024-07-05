@@ -44,5 +44,4 @@ All sentences into embeddings vector store.
 Define search-words for each category
 Search each word with cosine similarity, label all sentences higher than sensitivity_threshold with that category
 Repeat for each word in each category.
-
-##
+> this does require a lot of searches and is likely computationally heavy, dependent on how many search-words per category are used

@@ -1,76 +1,45 @@
 import json
 import os
 import uuid
+from typing import List, Dict, Union, Tuple
 from urllib.parse import parse_qsl
 
 from bs4 import BeautifulSoup
-from flask import Flask, jsonify, request
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from flask import Flask, jsonify, request, Response
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
 from src.AIService import SentenceEmbedder, AI_solution
 
-# One of the multiple options for an AIsolution!
+from models import Base, Person, PersonDoc, Doc, Label, LabelCategory
+from flask_cors import CORS
+
+"""
+AI-Powered Document Analysis and Categorization API
+
+This Flask-based API provides endpoints for managing persons, documents, and AI-powered
+document analysis. It uses SQLAlchemy for database operations and integrates with an
+AI service for document processing and categorization.
+
+The API allows users to:
+1. Create and retrieve person information
+2. Upload documents associated with persons
+3. Retrieve documents and their AI-processed content
+4. Manage label categories for document overview
+5. Retrieve categorized snippets from documents
+
+"""
+
+# Initialize AI solution
 solution: AI_solution = SentenceEmbedder()
 
-database_file = 'sqlite:///database.db'
+# Database configuration
+database_file: str = 'sqlite:///database.db'
 if not os.path.exists('database.db'):
     open('database.db', 'a').close()
 
 # Create a SQLite database
 engine = create_engine(database_file, echo=True)
-
-Base = declarative_base()
-
-
-# Define the models
-class Person(Base):
-    __tablename__ = 'persons'
-    person_id = Column(Integer, primary_key=True)
-    person_name = Column(String)
-    person_birthdate = Column(DateTime)
-    docs = relationship('PersonDoc', back_populates='person')
-
-
-class PersonDoc(Base):
-    __tablename__ = 'persons_docs'
-    person_id = Column(Integer, ForeignKey('persons.person_id'), primary_key=True)
-    doc_id = Column(String, ForeignKey('docs.doc_id'), primary_key=True)
-    person = relationship('Person', back_populates='docs')
-    doc = relationship('Doc', back_populates='persons')
-
-
-class Doc(Base):
-    __tablename__ = 'docs'
-    doc_id = Column(String, primary_key=True)
-    doc_path = Column(String, unique=True)
-    doc_text_path = Column(String)
-    doc_text_html = Column(String)
-    doc_name = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    persons = relationship('PersonDoc', back_populates='doc')
-    labels = relationship('Label', back_populates='doc')
-
-
-class Label(Base):
-    __tablename__ = 'labels'
-    doc_id = Column(String, ForeignKey('docs.doc_id'))
-    label_id = Column(Integer, primary_key=True)
-    start_char = Column(Integer)
-    end_char = Column(Integer)
-    label_content = Column(String)
-    label_category_id = Column(Integer, ForeignKey('label_categories.label_category_id'))
-    doc = relationship('Doc', back_populates='labels')
-    category = relationship('LabelCategory', back_populates='labels')
-
-
-class LabelCategory(Base):
-    __tablename__ = 'label_categories'
-    label_category_id = Column(Integer, primary_key=True)
-    label_category_name = Column(String)
-    labels = relationship('Label', back_populates='category')
-
 
 # Create the tables in the database
 Base.metadata.create_all(engine)
@@ -81,9 +50,20 @@ SessionLocal = sessionmaker(bind=engine)
 # Flask app
 app = Flask(__name__)
 
+# Allow CORS for the specific origin
+CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 
-# Helper function to get database session
-def get_db():
+
+def get_db() -> Session:
+    """
+    Creates and returns a new database session.
+
+    Returns:
+        Session: A new SQLAlchemy database session.
+
+    Raises:
+        Exception: If there's an error creating the session.
+    """
     db = SessionLocal()
     try:
         return db
@@ -92,15 +72,35 @@ def get_db():
         db.close()
 
 
-# Routes
 @app.route('/', methods=['GET', 'POST', 'PUT', 'PATCH'])
-def read_root():
-    return jsonify({"message": "Welcome to the API"})
+def read_root() -> Tuple[Response, int]:
+    """
+    Root endpoint for the API.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with a welcome message and HTTP status code 200.
+    """
+    return jsonify({"message": "Welcome to the AI-Text Highlighting API"}), 200
 
 
-# PERSON
 @app.route('/persons', methods=['POST'])
-def create_person():
+def create_person() -> Tuple[Response, int]:
+    """
+    Creates a new person in the database.
+
+    Expects JSON input with 'person_name' and 'person_birthdate'.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with the created person's details and HTTP status code.
+
+    Example response:
+        ({
+            "person_id": 1,
+            "person_name": "John Doe",
+            "person_birthdate": "1990-01-01T00:00:00",
+            "docs": []
+        }, 201)
+    """
     try:
         db = get_db()
         data = request.json
@@ -116,8 +116,7 @@ def create_person():
         return jsonify({
             "person_id": new_person.person_id,
             "person_name": new_person.person_name,
-            "person_birthdate": new_person.person_birthdate.isoformat(),
-            "docs": new_person.docs
+            "person_birthdate": new_person.person_birthdate.isoformat()
         }), 201
 
     except Exception as e:
@@ -129,13 +128,37 @@ def create_person():
 
 
 @app.route('/persons/<int:person_id>', methods=['GET'])
-def get_person(person_id):
+def get_person(person_id: int) -> Tuple[Response, int]:
+    """
+    Retrieves information about a specific person and their associated documents.
+
+    Args:
+        person_id (int): The ID of the person to retrieve.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with the person's details and associated documents,
+                              and HTTP status code.
+
+    Example response:
+        ({
+            "person_id": 1,
+            "person_name": "John Doe",
+            "person_birthdate": "1990-01-01T00:00:00",
+            "docs": [
+                {
+                    "doc_id": "abc123",
+                    "doc_name": "Resume.pdf",
+                    "doc_path": "/uploads/Resume.pdf",
+                    "created_at": "2023-07-04T12:00:00"
+                }
+            ]
+        }, 200)
+    """
     db = get_db()
     person = db.query(Person).filter(Person.person_id == person_id).first()
     if person is None:
         return jsonify({"error": "Person not found"}), 404
 
-    # Fetch associated documents through the PersonDoc association
     associated_docs = db.query(Doc).join(PersonDoc).filter(PersonDoc.person_id == person_id).all()
 
     return jsonify({
@@ -148,27 +171,64 @@ def get_person(person_id):
             "doc_path": doc.doc_path,
             "created_at": doc.created_at.isoformat() if doc.created_at else None
         } for doc in associated_docs]
-    })
+    }), 200
 
 
 @app.route('/persons', methods=['GET'])
-def get_persons():
+def get_persons() -> Tuple[Response, int]:
+    """
+    Retrieves a list of all persons in the database.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with a list of all persons and HTTP status code.
+
+    Example response:
+        ({
+            "persons": [
+                {
+                    "person_id": 1,
+                    "person_name": "John Doe",
+                    "person_birthdate": "1990-01-01T00:00:00"
+                },
+                {
+                    "person_id": 2,
+                    "person_name": "Jane Smith",
+                    "person_birthdate": "1985-05-15T00:00:00"
+                }
+            ]
+        }, 200)
+    """
     db = get_db()
     persons = db.query(Person).all()
     return jsonify([{
         "person_id": p.person_id,
         "person_name": p.person_name,
         "person_birthdate": p.person_birthdate.isoformat() if p.person_birthdate else None
-    } for p in persons])
+    } for p in persons]), 200
 
 
-# DOCUMENTS
 @app.route('/persons/<int:person_id>/docs', methods=['POST'])
-def create_document_for_person(person_id):
+def create_document_for_person(person_id: int) -> Tuple[Response, int]:
+    """
+    Creates a new document associated with a specific person.
+
+    Args:
+        person_id (int): The ID of the person to associate the document with.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with the created document's details and HTTP status code.
+
+    Example response:
+        ({
+            "doc_id": "abc123",
+            "doc_name": "Resume.pdf",
+            "created_at": "2023-07-04T12:00:00",
+            "person_id": 1
+        }, 201)
+    """
     try:
         db = get_db()
 
-        # Check if the person exists
         person = db.query(Person).filter(Person.person_id == person_id).first()
         if person is None:
             return jsonify({"error": "Person not found"}), 404
@@ -176,24 +236,19 @@ def create_document_for_person(person_id):
         if not request.data:
             return jsonify({"error": "Missing file data"}), 400
 
-        # Parse query string
         query_string = request.query_string.decode('utf-8')
         query_params = dict(parse_qsl(query_string))
 
-        # Extract filename from query params
         doc_name = query_params.get('doc_name')
         doc_path = query_params.get('doc_path')
         if not doc_name:
-            filename = f"temp_pdf_{str(uuid.uuid4())}.pdf"  # TODO: TEMPORARY FIX WHILE DEVELOPING, should return error 400
-            # return jsonify({"error": "Missing filename"}), 400
+            doc_name = f"temp_pdf_{str(uuid.uuid4())}.pdf"
 
         filepath = os.path.join(os.getcwd(), "uploads", doc_name)
 
-        # AI LOGIC BELOW
-        doc_text_html = solution.ingest_document(filepath, doc_name, person_id, request.data)
+        doc_text_html = solution.ingest_document(filepath=filepath, filename=doc_name, person_id=person_id, request_data=request.data)
         assert isinstance(doc_text_html, str), f"Expected string, got {type(doc_text_html)}"
 
-        # Create new document
         new_doc = Doc(
             doc_id=str(uuid.uuid4()),
             doc_path=doc_path,
@@ -205,7 +260,6 @@ def create_document_for_person(person_id):
 
         db.add(new_doc)
 
-        # Create association between person and document
         person_doc = PersonDoc(
             person_id=person_id,
             doc_id=new_doc.doc_id
@@ -230,7 +284,31 @@ def create_document_for_person(person_id):
 
 
 @app.route('/docs', methods=['GET'])
-def get_docs():
+def get_docs() -> Tuple[Response, int]:
+    """
+    Retrieves a list of all documents in the database.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with a list of all documents and HTTP status code.
+
+    Example response:
+        ({
+            "docs": [
+                {
+                    "doc_id": "abc123",
+                    "doc_name": "Resume.pdf",
+                    "created_at": "2023-07-04T12:00:00",
+                    "doc_text_html": "<html>...</html>"
+                },
+                {
+                    "doc_id": "def456",
+                    "doc_name": "Cover_Letter.pdf",
+                    "created_at": "2023-07-05T14:30:00",
+                    "doc_text_html": "<html>...</html>"
+                }
+            ]
+        }, 200)
+    """
     db = get_db()
     docs = db.query(Doc).all()
     return jsonify([{
@@ -238,12 +316,29 @@ def get_docs():
         "doc_name": d.doc_name,
         "created_at": d.created_at.isoformat() if d.created_at else None,
         "doc_text_html": d.doc_text_html
-    } for d in docs])
+    } for d in docs]), 200
 
 
-# single_document.json
 @app.route('/docs/<string:doc_id>', methods=['GET'])
-def get_doc(doc_id):
+def get_doc(doc_id: str) -> Tuple[Response, int]:
+    """
+    Retrieves information about a specific document.
+
+    Args:
+        doc_id (str): The ID of the document to retrieve.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with the document's details and HTTP status code.
+
+    Example response:
+        ({
+            "id": "abc123",
+            "name": "Resume.pdf",
+            "category": ["Work Experience", "Education"],
+            "html": "<html>...</html>",
+            "created_at": "2023-07-04T12:00:00"
+        }, 200)
+    """
     db = get_db()
     doc = db.query(Doc).filter(Doc.doc_id == doc_id).first()
     if doc is None:
@@ -254,11 +349,38 @@ def get_doc(doc_id):
         "category": solution.extract_unique_categories(doc.doc_text_html),
         "html": doc.doc_text_html,
         "created_at": doc.created_at.isoformat() if doc.created_at else None,
-    })
+    }), 200
 
 
 @app.route('/persons/<int:person_id>/docs/test', methods=['GET'])
-def get_person_docs(person_id):
+def get_person_docs(person_id: int) -> Tuple[Response, int]:
+    """
+    Retrieves all documents associated with a specific person.
+
+    Args:
+        person_id (int): The ID of the person whose documents to retrieve.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with a list of the person's documents and HTTP status code.
+
+    Example response:
+        ({
+            "docs": [
+                {
+                    "doc_id": "abc123",
+                    "doc_name": "Resume.pdf",
+                    "created_at": "2023-07-04T12:00:00",
+                    "doc_text_html": "<html>...</html>"
+                },
+                {
+                    "doc_id": "def456",
+                    "doc_name": "Cover_Letter.pdf",
+                    "created_at": "2023-07-05T14:30:00",
+                    "doc_text_html": "<html>...</html>"
+                }
+            ]
+        }, 200)
+    """
     db = get_db()
     person = db.query(Person).filter(Person.person_id == person_id).first()
     if person is None:
@@ -267,13 +389,26 @@ def get_person_docs(person_id):
         "doc_id": d.doc.doc_id,
         "doc_name": d.doc.doc_name,
         "created_at": d.doc.created_at.isoformat() if d.doc.created_at else None,
-        "doc_text_html": d.doc_text_html
-    } for d in person.docs])
+        "doc_text_html": d.doc.doc_text_html
+    } for d in person.docs]), 200
 
 
-# LABEL_CATEGORIES
 @app.route('/label_categories', methods=['POST'])
-def create_label_category():
+def create_label_category() -> Tuple[Response, int]:
+    """
+    Creates a new label category.
+
+    Expects JSON input with 'label_category_name' and 'label_category_id'.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with the created category's details and HTTP status code.
+
+    Example response:
+        ({
+            "label_category_id": 1,
+            "label_category_name": "Work Experience"
+        }, 201)
+    """
     try:
         db = get_db()
         data = request.json
@@ -301,20 +436,64 @@ def create_label_category():
 
 
 @app.route('/label_categories', methods=['GET'])
-def get_label_categories():
+def get_label_categories() -> Tuple[Response, int]:
+    """
+    Retrieves all label categories.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with a list of all label categories and HTTP status code.
+
+    Example response:
+        ({
+            "categories": [
+                {
+                    "label_category_id": 1,
+                    "label_category_name": "Work Experience"
+                },
+                {
+                    "label_category_id": 2,
+                    "label_category_name": "Education"
+                }
+            ]
+        }, 200)
+    """
     db = get_db()
     label_categories = db.query(LabelCategory).all()
     return jsonify([{
         "label_category_id": lc.label_category_id,
         "label_category_name": lc.label_category_name
-    } for lc in label_categories])
+    } for lc in label_categories]), 200
 
 
-# LABELS
-# categories.json (frontend)
 @app.route('/categories/<string:person_id>', methods=['GET'])
-def get_categories_person(person_id):
-    def count_categories(html_string):
+def get_categories_person(person_id: str) -> Tuple[Response, int]:
+    """
+    Retrieves all categories and their counts for documents associated with a specific person.
+
+    Args:
+        person_id (str): The ID of the person whose document categories to retrieve.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with category information and HTTP status code.
+
+    Example response:
+        ({
+            "categories": [
+                {
+                    "id": 1,
+                    "name": "Work Experience",
+                    "numberOfLinkedSnippets": 5
+                },
+                {
+                    "id": 2,
+                    "name": "Education",
+                    "numberOfLinkedSnippets": 3
+                }
+            ]
+        }, 200)
+    """
+
+    def count_categories(html_string: str) -> Dict[int, int]:
         soup = BeautifulSoup(html_string, 'html.parser')
         category_counts = {}
         spans = soup.find_all('span')
@@ -324,7 +503,7 @@ def get_categories_person(person_id):
                 for cls in classes:
                     if cls.startswith('cat') and cls[3:].isdigit():
                         print('cls: ' + cls)
-                        category_id = int(cls[3:])  # remove 'cat'
+                        category_id = int(cls[3:])
                         if category_id != '':
                             if category_id in category_counts:
                                 category_counts[category_id] += 1
@@ -340,7 +519,6 @@ def get_categories_person(person_id):
 
     category_counts = {}
 
-    # Fetch associated documents through the PersonDoc association
     associated_docs = db.query(Doc).join(PersonDoc).filter(PersonDoc.person_id == person_id).all()
 
     for doc in associated_docs:
@@ -351,21 +529,47 @@ def get_categories_person(person_id):
             else:
                 category_counts[category] = count
 
-    # Format the result
     result = []
     for category_id, count in category_counts.items():
         result.append({
             "id": category_id,
-            "name": solution.categories[category_id - 1]["name"],  # Mapping the category ID to name
+            "name": solution.categories[category_id - 1]["name"],
             "numberOfLinkedSnippets": count
         })
-    return jsonify(result)
+    return jsonify(result), 200
 
 
-# snippets.json (frontend)
 @app.route('/categories/<int:person_id>/<int:category_id>', methods=['GET'])
-def get_snippets_person(person_id, category_id):
-    def extract_relevant_snippets(html_string, category_id):
+def get_snippets_person(person_id: int, category_id: int) -> Tuple[Response, int]:
+    """
+    Retrieves snippets from documents associated with a specific person and category.
+
+    Args:
+        person_id (int): The ID of the person whose snippets to retrieve.
+        category_id (int): The ID of the category to filter snippets.
+
+    Returns:
+        Tuple[Response, int]: A JSON response with snippet information and HTTP status code.
+
+    Example response:
+        ({
+            "category": 1,
+            "snippets": [
+                {
+                    "document_id": "abc123",
+                    "document_name": "Resume.pdf",
+                    "html": "<span class='cat1'>...</span>"
+                },
+                {
+                    "document_id": "def456",
+                    "document_name": "Cover_Letter.pdf",
+                    "html": "<span class='cat1'>...</span>"
+                }
+            ]
+        }, 200)
+    """
+
+    def extract_relevant_snippets(html_string: str, category_id: int) -> List[str]:
         soup = BeautifulSoup(html_string, 'html.parser')
         spans = soup.find_all('span')
         snippets = []
@@ -375,12 +579,9 @@ def get_snippets_person(person_id, category_id):
                 classes = span.attrs['class']
                 if f'cat{category_id}' in classes:
                     snippet = ""
-                    # Get the previous span if exists
                     if i > 0:
                         snippet += str(spans[i - 1])
-                    # Get the current span
                     snippet += str(span)
-                    # Get the next span if exists
                     if i < len(spans) - 1:
                         snippet += str(spans[i + 1])
                     snippets.append(snippet)
@@ -395,7 +596,6 @@ def get_snippets_person(person_id, category_id):
 
     snippets = []
 
-    # Fetch associated documents through the PersonDoc association
     associated_docs = db.query(Doc).join(PersonDoc).filter(PersonDoc.person_id == person_id).all()
 
     for doc in associated_docs:
@@ -412,30 +612,31 @@ def get_snippets_person(person_id, category_id):
         "snippets": snippets
     }
 
-    return jsonify(result)
+    return jsonify(result), 200
 
 
-def create_label_categories():
-    # Create a new database session
+def create_label_categories() -> None:
+    """
+    Creates or updates label categories from a JSON file.
+
+    This function reads category data from a 'Categories.json' file and creates
+    or updates corresponding LabelCategory entries in the database.
+    """
     session = SessionLocal()
 
     with open('../Categories.json', 'r') as file:
         categories_data = json.load(file)
 
-    # Get the list of categories
     categories = categories_data.get('categories', [])
 
     try:
         for category in categories:
-            # Check if the category already exists
             existing_category = session.query(LabelCategory).filter_by(label_category_id=category['id']).first()
 
             if existing_category:
-                # Update existing category
                 existing_category.label_category_name = category['name']
                 print(f"Updated category: {category['name']}")
             else:
-                # Create new category
                 new_category = LabelCategory(
                     label_category_id=category['id'],
                     label_category_name=category['name']
@@ -443,20 +644,18 @@ def create_label_categories():
                 session.add(new_category)
                 print(f"Created new category: {category['name']}")
 
-        # Commit the changes
         session.commit()
         print("All categories have been successfully created or updated.")
 
     except Exception as e:
-        # Roll back the changes if there's any other error
         session.rollback()
         print(f"An unexpected error occurred: {str(e)}")
 
     finally:
-        # Close the session
         session.close()
 
 
+# Initialize label categories
 create_label_categories()
 
 if __name__ == "__main__":

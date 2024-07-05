@@ -7,9 +7,9 @@ import { Observable, catchError, tap, throwError, map } from "rxjs";
   providedIn: 'root'
 })
 export class DocumentService {
-	private host = `${location.hostname}:8001`;
-  private categoriesUrl = 'persons/1/categories';
-  private snippetsUrl = 'persons/1';
+	private host = `http://127.0.0.1:8001`;
+  private categoriesUrl = 'categories/1';
+  private snippetsUrl = 'categories/1';
   private documentUrl = 'docs';
 
   constructor(private http: HttpClient) { }
@@ -33,7 +33,7 @@ export class DocumentService {
 		);
 	}
 
-  getDocument(doc_id: Number): Observable<any> {
+  getDocument(doc_id: any): Observable<any> {
 		return this.http.get(`${this.host}/${this.documentUrl}/${doc_id}`)
     .pipe(
 			tap(data => console.log('All', JSON.stringify(data))),

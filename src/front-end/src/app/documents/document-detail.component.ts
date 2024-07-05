@@ -25,13 +25,13 @@ export class DocumentDetailComponent implements OnInit, OnDestroy  {
   trustedHtml: any = '';
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    
+    const id = this.route.snapshot.paramMap.get('id');
+    console.log(id)
     this.sub = this.documentService.getDocument(id).subscribe({
       next: document => {
 				this.document = document;
         console.log(document);
-        
+
 			},
 			error: err => console.log(err)
     })

@@ -79,7 +79,7 @@ class SentenceEmbeddingSolution(AI_solution):
                 return category["id"]
         return None
 
-    def process_document(self, filepath: str, filename: str, person_id: str) -> str:
+    def process_document(self, filepath: str, filename: str, person_id: int) -> str:
         # Extract text from PDF
         reader = PdfReader(filepath)
         text = ""

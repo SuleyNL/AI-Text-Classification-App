@@ -13,7 +13,7 @@ class AI_solution(abc.ABC):
         self.categories = self.load_categories('../Categories.json')
 
     @abc.abstractmethod
-    def process_document(self, filepath: str, filename: str, person_id: str) -> str:
+    def process_document(self, filepath: str, filename: str, person_id: int) -> str:
         pass
 
     @staticmethod
@@ -22,7 +22,7 @@ class AI_solution(abc.ABC):
             categories_data = json.load(file)
         return categories_data['categories']
 
-    def ingest_document(self, filepath: str, filename: str, person_id: str, request_data: bytes) -> str:
+    def ingest_document(self, filepath: str, filename: str, person_id: int, request_data: bytes) -> str:
         try:
             print('REQUEST DATA')
             print(request_data)
