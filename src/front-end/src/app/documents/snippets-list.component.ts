@@ -27,13 +27,16 @@ export class SnippetsListComponent implements OnInit, OnDestroy {
 
     this.sub = this.documentService.getSnippets(id).subscribe({
       next: snippets => {
-				// this.snippets = snippets;
+				this.snippets = snippets;
         console.log(snippets);
         
 			},
 			error: err => console.log(err)
     })
-    this.snippets = snippets;
+    // from json
+    if (this.snippets.length === 0) {
+      this.snippets = snippets;
+    }
   }
 
   ngOnDestroy(): void {

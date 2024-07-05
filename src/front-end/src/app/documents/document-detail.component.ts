@@ -29,13 +29,16 @@ export class DocumentDetailComponent implements OnInit, OnDestroy  {
     
     this.sub = this.documentService.getDocument(id).subscribe({
       next: document => {
-				// this.document = document;
+				this.document = document;
         console.log(document);
         
 			},
 			error: err => console.log(err)
     })
-    this.document = document;
+    // from json
+    if (this.document.length === 0) {
+      this.document = document;
+    }
     this.trustedHtml = this.sanitizer.bypassSecurityTrustHtml(this.document.html);
   }
 

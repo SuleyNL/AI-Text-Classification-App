@@ -22,13 +22,16 @@ export class CategoriesListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub = this.documentService.getCategories().subscribe({
       next: categories => {
-				// this.categories = categories;
+				this.categories = categories;
         console.log(categories);
         
 			},
 			error: err => console.log(err)
     })
-    this.categories = categories;
+    // from json
+    if (this.categories.length === 0) {
+      this.categories = categories;
+    }
   }
 
   ngOnDestroy(): void {
