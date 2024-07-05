@@ -8,13 +8,13 @@ import snippets from '../../api/documents/snippets.json';
 import { SafeHtmlPipe } from '../shared/safeHtml.pipe'
 
 @Component({
-  selector: 'app-documents-list',
+  selector: 'app-snippets-list',
   standalone: true,
   imports: [CommonModule, RouterModule, SafeHtmlPipe],
-  templateUrl: './documents-list.component.html',
-  styleUrl: './documents-list.component.scss'
+  templateUrl: './snippets-list.component.html',
+  styleUrl: './snippets-list.component.scss'
 })
-export class DocumentsListComponent implements OnInit, OnDestroy {
+export class SnippetsListComponent implements OnInit, OnDestroy {
   sub!: Subscription;
 
   constructor(private documentService: DocumentService,

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DocumentsListComponent } from './documents-list.component';
+import { SnippetsListComponent } from './snippets-list.component';
 
-describe('DocumentsListComponent', () => {
-  let component: DocumentsListComponent;
-  let fixture: ComponentFixture<DocumentsListComponent>;
+describe('SnippetsListComponent', () => {
+  let component: SnippetsListComponent;
+  let fixture: ComponentFixture<SnippetsListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DocumentsListComponent]
+      imports: [SnippetsListComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(DocumentsListComponent);
+    fixture = TestBed.createComponent(SnippetsListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
