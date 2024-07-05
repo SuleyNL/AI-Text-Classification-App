@@ -1,0 +1,32 @@
+[
+    {
+        "id": 4,
+        "name": "Relatie partner gezin en familie",
+        "numberOfLinkedSnippets": 7
+    },
+    {
+        "id": 7,
+        "name": "Psychosociaal functioneren",
+        "numberOfLinkedSnippets": 17
+    },
+    {
+        "id": 5,
+        "name": "Sociaal netwerk",
+        "numberOfLinkedSnippets": 9
+    },
+    {
+        "id": 2,
+        "name": "Dagbesteding",
+        "numberOfLinkedSnippets": 9
+    },
+    {
+        "id": 8,
+        "name": "Houding",
+        "numberOfLinkedSnippets": 6
+    },
+    {
+        "id": 3,
+        "name": "Financien",
+        "numberOfLinkedSnippets": 9
+    }
+]
