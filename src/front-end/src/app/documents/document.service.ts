@@ -7,9 +7,9 @@ import { Observable, catchError, tap, throwError, map } from "rxjs";
   providedIn: 'root'
 })
 export class DocumentService {
-  private categoriesUrl = 'http://127.0.0.1:8001/persons/<string:person_id>/categories';
-  private snippetsUrl = 'http://127.0.0.1:8001/persons/<int:person_id>/<int:category_id>';
-  private documentUrl = 'http://127.0.0.1:8001/docs/<string:doc_id>';
+  private categoriesUrl = 'http://127.0.0.1:8001/persons/1/categories';
+  private snippetsUrl = 'http://127.0.0.1:8001/persons/1/';
+  private documentUrl = 'http://127.0.0.1:8001/docs/';
 
   constructor(private http: HttpClient) { }
 
@@ -25,16 +25,16 @@ export class DocumentService {
 
 	// GET request to fetch all snippets linked to person id and category id
 	// Query variable: person id, category id
-	getSnippets(): Observable<any> {
-		return this.http.get(this.snippetsUrl)
+	getSnippets(cat_id: Number): Observable<any> {
+		return this.http.get(`${this.snippetsUrl}${cat_id}`)
     .pipe(
 			tap(data => console.log('All', JSON.stringify(data))),
 			catchError(this.handleError)
 		);
 	}
 
-  getDocument(): Observable<any> {
-		return this.http.get(this.documentUrl)
+  getDocument(doc_id: Number): Observable<any> {
+		return this.http.get(`${this.documentUrl}${doc_id}`)
     .pipe(
 			tap(data => console.log('All', JSON.stringify(data))),
 			catchError(this.handleError)

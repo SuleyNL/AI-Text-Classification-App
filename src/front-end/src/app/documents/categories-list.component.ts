@@ -20,18 +20,18 @@ export class CategoriesListComponent implements OnInit, OnDestroy {
   categories: any = [];
 
   ngOnInit(): void {
-    // this.sub = this.documentService.getCategories().subscribe({
-    //   next: categories => {
-		// 		this.categories = categories;
-    //     console.log(categories);
+    this.sub = this.documentService.getCategories().subscribe({
+      next: categories => {
+				// this.categories = categories;
+        console.log(categories);
         
-		// 	},
-		// 	error: err => console.log(err)
-    // })
+			},
+			error: err => console.log(err)
+    })
     this.categories = categories;
   }
 
   ngOnDestroy(): void {
-		// this.sub.unsubscribe();
+		this.sub.unsubscribe();
 	}
 }

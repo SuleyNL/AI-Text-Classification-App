@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { DocumentService } from './document.service';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -18,7 +18,6 @@ export class DocumentDetailComponent implements OnInit, OnDestroy  {
   sub!: Subscription;
 
   constructor(private route: ActivatedRoute,
-              private router: Router,
               private documentService: DocumentService,
               private sanitizer: DomSanitizer) {}
 
@@ -28,19 +27,19 @@ export class DocumentDetailComponent implements OnInit, OnDestroy  {
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     
-    // this.sub = this.documentService.getDocuments().subscribe({
-    //   next: documents => {
-		// 		this.documents = documents;
-    //     console.log(documents);
+    this.sub = this.documentService.getDocument(id).subscribe({
+      next: document => {
+				// this.document = document;
+        console.log(document);
         
-		// 	},
-		// 	error: err => console.log(err)
-    // })
+			},
+			error: err => console.log(err)
+    })
     this.document = document;
     this.trustedHtml = this.sanitizer.bypassSecurityTrustHtml(this.document.html);
   }
 
   ngOnDestroy(): void {
-		// this.sub.unsubscribe();
+		this.sub.unsubscribe();
 	}
 }
