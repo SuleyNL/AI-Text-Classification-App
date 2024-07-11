@@ -1,4 +1,4 @@
-from src.AIService.AI_solution import AI_solution
+from src.AIServiceLogic.AI_solution import AI_solution
 import chromadb
 from tqdm import tqdm
 from PyPDF2 import PdfReader
@@ -7,28 +7,55 @@ from llama_index.core.node_parser import SentenceSplitter
 import ollama
 from typing import List, Dict, Any
 import numpy as np
-from src.AIService import EmbeddingFunctions
+from src.AIServiceLogic import EmbeddingFunctions
 
 
 class SentenceEmbeddingSolution(AI_solution):
-    categories: List[Dict[str, Any]]
-    category_embeddings: Dict
+    """
+    A solution for embedding sentences and categorizing document content.
 
-    def __init__(self, similarity_threshold=0.65):
-        super().__init__()  # pre-fills categories
+    This class extends AI_solution to provide functionality for embedding sentences,
+    categorizing them based on similarity to predefined categories, and processing
+    documents to generate labeled HTML output.
+
+    Attributes:
+        categories (List[Dict[str, Any]]): List of category dictionaries, each containing
+                                           'id', 'name', and 'wordCloud' keys.
+        category_embeddings (Dict[str, List[float]]): Embeddings for each category's word cloud.
+        theme_embedder (EmbeddingFunctions.ThemeEmbedder): Embedder for themes.
+        client (chromadb.Client): ChromaDB client for document storage.
+        collection (chromadb.Collection): ChromaDB collection for storing embeddings.
+        similarity_threshold (float): Threshold for determining category relevance.
+    """
+
+    def __init__(self, similarity_threshold: float = 0.65):
+        """
+        Initialize the SentenceEmbeddingSolution.
+
+        Args:
+            similarity_threshold (float, optional): Threshold for category similarity. Defaults to 0.65.
+        """
+        super().__init__() # pre-fills categories
         self.theme_embedder = EmbeddingFunctions.ThemeEmbedder(self.categories)
         self.client = chromadb.Client()
         self.collection = self.client.create_collection(
             name="docs",
-            metadata={"hnsw:space": "cosine"},
-            # ^^ options for "hnsw:space" are "l2", "cosine", and "ip".
-            # See: https://docs.trychroma.com/guides#changing-the-distance-function for more info.
-            #embedding_function=EmbeddingFunctions.Mxbai
+            metadata={"hnsw:space": "cosine"}
         )
+        # ^^ options for "hnsw:space" are "l2", "cosine", and "ip".
+        # See: https://docs.trychroma.com/guides#changing-the-distance-function for more info.
+        # embedding_function=EmbeddingFunctions.Mxbai
+
         self.category_embeddings = self.embed_categories()
         self.similarity_threshold = similarity_threshold
 
-    def embed_categories(self):
+    def embed_categories(self) -> Dict[str, List[float]]:
+        """
+        Embed all categories using their word clouds.
+
+        Returns:
+            Dict[str, List[float]]: A dictionary mapping category names to their embeddings.
+        """
         category_embeddings = {}
         for category in self.categories:
             category_text = ' '.join(category['wordCloud'])
@@ -37,7 +64,16 @@ class SentenceEmbeddingSolution(AI_solution):
             category_embeddings[category['name']] = embedding
         return category_embeddings
 
-    def get_relevant_themes(self, sentence: str):
+    def get_relevant_themes(self, sentence: str) -> List[str]:
+        """
+        Get relevant themes for a given sentence based on embedding similarity.
+
+        Args:
+            sentence (str): The input sentence.
+
+        Returns:
+            List[str]: A list of relevant theme names.
+        """
         sentence_embedding = self.theme_embedder.get_sentence_embedding(sentence)
         similarities = self.theme_embedder.get_theme_similarities(sentence_embedding)
 
@@ -54,7 +90,17 @@ class SentenceEmbeddingSolution(AI_solution):
 
         return relevant_themes
 
-    def get_relevant_categories(self, sentence, sentence_embedding):
+    def get_relevant_categories(self, sentence: str, sentence_embedding: List[float]) -> List[str]:
+        """
+        Get relevant categories for a given sentence based on embedding similarity.
+
+        Args:
+            sentence (str): The input sentence.
+            sentence_embedding (List[float]): The embedding of the input sentence.
+
+        Returns:
+            List[str]: A list of relevant category names.
+        """
         relevant_categories = []
         print(f"Sentence: {sentence}")
         print("Category similarities:")
@@ -69,29 +115,30 @@ class SentenceEmbeddingSolution(AI_solution):
                 relevant_categories.append(category_name)
 
         print(f"Relevant categories: {relevant_categories}")
-        print("-" * 50)  # Separator for readability
+        print("-" * 50)
 
         return relevant_categories
 
-    def get_category_id_by_name(self, name: str) -> int:
-        for category in self.categories:
-            if category["name"] == name:
-                return category["id"]
-        return None
-
     def process_document(self, filepath: str, filename: str, person_id: int) -> str:
+        """
+        Process a document, extract text, split into sentences, embed, and categorize.
+
+        Args:
+            filepath (str): The path to the document file.
+            filename (str): The name of the document file.
+            person_id (int): The ID of the person associated with the document.
+
+        Returns:
+            str: HTML string with categorized sentences.
+        """
         # Extract text from PDF
         reader = PdfReader(filepath)
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text()
-
-        # Create a llama_index Document object
-        doc = Document(text=text)
+        text = "".join(page.extract_text() for page in reader.pages)
 
         # TODO: below steps can be split into 2 generic functions (perhaps in the AI_solution class?)
         # 1. Split into sentences
-        splitter = SentenceSplitter(chunk_size=50, chunk_overlap=5, )
+        doc = Document(text=text)
+        splitter = SentenceSplitter(chunk_size=50, chunk_overlap=5)
         nodes = splitter.get_nodes_from_documents([doc])
         sentences = [node.text for node in nodes]
 
@@ -113,20 +160,12 @@ class SentenceEmbeddingSolution(AI_solution):
             #relevant_categories = self.get_relevant_themes(sentence)
 
             if relevant_categories:
-                # TODO: should be cat cat1 cat2 cat3
                 category_classes = ' '.join([category.lower().replace(' ', '_') for category in relevant_categories])
-                category_classes_frontend = ' '.join([('cat' + str(self.get_category_id_by_name(category))) for category in relevant_categories])
-
-                doc_html.append(f'<span class=\"cat {category_classes_frontend}\">{sentence}</span>')
+                category_classes_frontend = ' '.join(
+                    [f'cat{self.get_category_id_by_name(category)}' for category in relevant_categories])
+                doc_html.append(f'<span class="cat {category_classes_frontend}">{sentence}</span>')
             else:
                 doc_html.append(f'<span>{sentence}</span>')
-
-
-            #print(f"{sentence} stored in db with metadata filename: {filename} and person_id: {person_id}")
-            #print(f"Relevant categories: {relevant_categories}")
-
-            #doc_html.append(f"<span class=\"sociaal_netwerk financien\">{sentence}</span>")
-            #doc_html.append(f'<span class="{category_classes}">{sentence}</span>')
 
             print(f"{sentence} stored in db with metadata filename: {filename} and person_id: {person_id}")
 

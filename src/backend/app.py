@@ -9,7 +9,7 @@ from flask import Flask, jsonify, request, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
-from src.AIService import SentenceEmbedder, AI_solution
+from src.AIServiceLogic import SentenceEmbedder, AI_solution
 
 from models import Base, Person, PersonDoc, Doc, Label, LabelCategory
 from flask_cors import CORS
@@ -38,7 +38,7 @@ database_file: str = 'sqlite:///database.db'
 if not os.path.exists('database.db'):
     open('database.db', 'a').close()
 
-# Create a SQLite database
+# Create a local SQLite database
 engine = create_engine(database_file, echo=True)
 
 # Create the tables in the database
@@ -83,6 +83,7 @@ def read_root() -> Tuple[Response, int]:
     return jsonify({"message": "Welcome to the AI-Text Highlighting API"}), 200
 
 
+# Persons
 @app.route('/persons', methods=['POST'])
 def create_person() -> Tuple[Response, int]:
     """
