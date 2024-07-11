@@ -8,10 +8,10 @@ from bs4 import BeautifulSoup
 
 class AI_solution(abc.ABC):
     """
-    Abstract base class for AI solutions that process documents and categorize content.
+    Abstract base class for AI solutions.
 
-    This class provides a framework for implementing AI solutions that can process
-    documents, extract categories, and handle document ingestion.
+    This class provides a framework for solutions that require the logic for processing documents and
+    importing categories from the `src/Categories.json` file.
 
     Attributes:
         solution_name (str): The name of the AI solution (derived from class name).
@@ -93,10 +93,11 @@ class AI_solution(abc.ABC):
 
     def ingest_document(self, filepath: str, filename: str, person_id: int, request_data: bytes) -> str:
         """
-        Ingest a document, save it temporarily, process it, and clean up.
+        Ingest a document, save it temporarily, process it, and clean up (Delete it) afterwards.
 
-        This method handles the full lifecycle of document ingestion, including
-        saving the document, processing it, and removing the temporary file.
+        This method handles the full lifecycle of document ingestion, from
+        saving the document, processing it, to removing the temporary file.
+        # TODO make it a truly temp_file with the tempfile library
 
         Args:
             filepath (str): The path where the document will be temporarily saved.
@@ -134,9 +135,28 @@ class AI_solution(abc.ABC):
             if os.path.exists(filepath):
                 os.remove(filepath)
 
+    def get_category_id_by_name(self, name: str) -> int:
+        """
+        Get the ID of a category by its name.
+
+        Args:
+            name (str): The name of the category.
+
+        Returns:
+            int: The ID of the category.
+
+        Raises:
+            ValueError: If the category is not found.
+        """
+        for category in self.categories:
+            if category["name"] == name:
+                return category["id"]
+
+        raise ValueError(f"Category '{name}' not found.")
+
     def extract_unique_categories(self, html_string: str) -> List[int]:
         """
-        Extract unique category IDs from an HTML string.
+        Extract unique category IDs from a HTML string.
 
         This method parses the HTML string and extracts unique category IDs
         from span elements with class names starting with 'cat'.
@@ -159,22 +179,3 @@ class AI_solution(abc.ABC):
                             unique_categories.add(int(cat_id))
 
         return list(unique_categories)
-
-    def get_category_id_by_name(self, name: str) -> int:
-        """
-        Get the ID of a category by its name.
-
-        Args:
-            name (str): The name of the category.
-
-        Returns:
-            int: The ID of the category.
-
-        Raises:
-            ValueError: If the category is not found.
-        """
-        for category in self.categories:
-            if category["name"] == name:
-                return category["id"]
-
-        raise ValueError(f"Category '{name}' not found.")
