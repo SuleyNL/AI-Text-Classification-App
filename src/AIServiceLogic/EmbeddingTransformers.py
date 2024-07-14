@@ -1,16 +1,16 @@
-from typing import Dict, List, Sequence, Union
+from typing import Dict, List, Sequence, Union, Any
 from chromadb import EmbeddingFunction, Embeddings
 
 import numpy as np
-from src.AIServiceLogic import EmbeddingFunctions, EmbeddingTransformerBase
+from src.AIServiceLogic import EmbeddingFunctions
 from src.AIServiceLogic.EmbeddingTransformerBase import EmbeddingTransformerBase
 
 
-class EmptyTransformer2(EmbeddingTransformerBase):
+class EmptyTransformer(EmbeddingTransformerBase):
     """
-    A class that mimics ThemeTransformer but doesn't modify any embeddings.
+    A class of the type EmbeddingTransformerBase that doesn't modify any embeddings.
 
-    This class has the same method signatures as ThemeTransformer and calculates
+    This class has the same method signatures as a regular EmbeddingTransformerBase but calculates
     similarities without modifying embeddings.
 
     Attributes:
@@ -18,38 +18,24 @@ class EmptyTransformer2(EmbeddingTransformerBase):
         embedder (callable): A function to generate embeddings.
         theme_embeddings (Dict[str, np.ndarray]): Embeddings for each theme.
     """
+    def get_sentence_embedding(self, sentence: str) -> np.ndarray:
+        return np.array(self._get_embedding(sentence)[0])
 
-    def __init__(self, categories: List[Dict[str, List[str]]], alpha: float = 0.51, embedder: callable = None):
+    def _get_embedding(self, text: str) -> Embeddings:
+        return self.embedder([text])
+
+    def __init__(self, categories: List[Dict[str, List[str]]], embedder: EmbeddingFunction = EmbeddingFunctions.Mxbai):
         """
         Initialize the EmptyTransformer.
 
         Args:
             categories (List[Dict[str, List[str]]]): A list of theme dictionaries.
-            alpha (float, optional): Unused. Kept for compatibility.
-            embedder (callable, optional): A function to generate embeddings.
+            embedder (EmbeddingFunction, optional): A function to generate embeddings.
         """
         super().__init__(embedder)
         self.categories = categories
         self.embedder = embedder
         self.theme_embeddings = self._create_theme_embeddings()
-
-    def get_sentence_embedding(self, sentence: str) -> np.ndarray:
-        """
-        Get the embedding for a given sentence without modification.
-
-        Args:
-            sentence (str): The input sentence to embed.
-
-        Returns:
-            np.ndarray: The unmodified embedding of the input sentence.
-        """
-        embedding = self.embedder([sentence])[0]
-
-        # Prove that the embedding is not changed
-        original_embedding = np.array(embedding)
-        assert np.array_equal(embedding, original_embedding), "Embedding should not be modified"
-
-        return embedding
 
     def get_category_similarities(self, sentence_embedding: np.ndarray) -> Dict[str, float]:
         """
@@ -61,22 +47,18 @@ class EmptyTransformer2(EmbeddingTransformerBase):
         Returns:
             Dict[str, float]: A dictionary mapping theme names to their similarity scores.
         """
-        # Prove that the sentence_embedding is not changed
-        original_embedding = np.array(sentence_embedding)
-        assert np.array_equal(sentence_embedding, original_embedding), "Sentence embedding should not be modified"
-
         similarities = {}
         for theme_name, theme_embedding in self.theme_embeddings.items():
             similarity = self._cosine_similarity(sentence_embedding, theme_embedding)
             similarities[theme_name] = similarity
         return similarities
 
-    def _create_theme_embeddings(self) -> Dict[str, np.ndarray]:
+    def _create_theme_embeddings(self) -> dict[str, np.ndarray]:
         """
         Create embeddings for each theme based on its word cloud.
 
         Returns:
-            Dict[str, np.ndarray]: A dictionary mapping theme names to their embeddings.
+            dict[str, np.ndarray]: A dictionary mapping theme names to their embeddings.
         """
         theme_embeddings = {}
         for theme in self.categories:
@@ -84,80 +66,9 @@ class EmptyTransformer2(EmbeddingTransformerBase):
             word_cloud = theme['wordCloud']
             embeddings = self.embedder(word_cloud)
             theme_embeddings[theme_name] = np.mean(embeddings, axis=0)
+        print('theme embeddings = ')
+        print(theme_embeddings)
         return theme_embeddings
-
-    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
-        """
-        Calculate the cosine similarity between two vectors.
-
-        Args:
-            a (np.ndarray): First vector.
-            b (np.ndarray): Second vector.
-
-        Returns:
-            float: Cosine similarity between the two vectors.
-        """
-        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-    def _get_embedding(self, text: str) -> np.ndarray:
-        """
-        Get the embedding for a given text without modification.
-
-        Args:
-            text (str): The input text to embed.
-
-        Returns:
-            np.ndarray: The unmodified embedding of the input text.
-        """
-        embedding = self.embedder([text])[0]
-
-        # Prove that the embedding is not changed
-        original_embedding = np.array(embedding)
-        assert np.array_equal(embedding, original_embedding), "Embedding should not be modified"
-
-        return embedding
-
-
-class EmptyTransformer(EmbeddingTransformerBase):
-    def _get_embedding(self, sentence: str) -> Embeddings:
-        return self.embedder([sentence])
-
-    def get_sentence_embedding(self, sentence: str) -> List[Sequence[float] | Sequence[int]]:
-        pass
-
-    def __init__(self,
-                 categories: List[Dict[str, List[str]]],
-                 embedder: EmbeddingFunction = EmbeddingFunctions.Mxbai):
-        super().__init__(embedder)  # Call the parent class constructor with the embedder
-        self.embedder = embedder
-        self.categories = categories
-        self.theme_embeddings = self._create_category_embeddings()
-
-    def _create_category_embeddings(self) -> Dict[str, np.ndarray]:
-        """
-        Create embeddings for each category based on its word cloud.
-
-        Returns:
-            Dict[str, np.ndarray]: A dictionary mapping category names to their embeddings.
-        """
-        theme_embeddings = {}
-        for theme in self.categories:
-            theme: dict
-            theme_name: str = theme['name']
-            word_cloud: List[str] = theme['wordCloud']
-            # Old= embeddings: List[np.ndarray] = [self._get_embedding(word) for word in word_cloud]
-            embeddings: List[Union[List[Sequence[float]], Sequence[int]]] = [self._get_embedding(word)[0] for word in word_cloud]
-            # Convert the list of embeddings to a numpy array
-            embeddings_array: np.ndarray = np.array(embeddings)
-            theme_embeddings[theme_name]: np.ndarray = np.mean(embeddings_array, axis=0)
-        return theme_embeddings
-
-    def get_category_similarities(self, sentence_embedding: np.ndarray) -> Dict[str, float]:
-        similarities = {}
-        for theme_name, theme_embedding in self.theme_embeddings.items():
-            similarity = self._cosine_similarity(sentence_embedding, theme_embedding)
-            similarities[theme_name] = similarity
-        return similarities
 
 
 class ThemeTransformer(EmbeddingTransformerBase):
@@ -206,7 +117,7 @@ class ThemeTransformer(EmbeddingTransformerBase):
         Returns:
             np.ndarray: The embedding of the input sentence.
         """
-        return self._get_embedding(sentence)  # - self.negative_embedding #TODO: For later experimentation
+        return self._get_embedding(sentence)[0]  # - self.negative_embedding #TODO: For later experimentation
 
     def get_category_similarities(self, sentence_embedding: np.ndarray) -> Dict[str, float]:
         """
@@ -240,7 +151,7 @@ class ThemeTransformer(EmbeddingTransformerBase):
             theme: dict
             theme_name: str = theme['name']
             word_cloud: List[str] = theme['wordCloud']
-            embeddings: List[np.ndarray] = [self._get_embedding(word) for word in word_cloud]
+            embeddings: List[np.ndarray] = [self._get_embedding(word)[0] for word in word_cloud]
             theme_embeddings[theme_name]: np.ndarray = np.mean(embeddings, axis=0)
         return theme_embeddings
 
@@ -271,7 +182,7 @@ class ThemeTransformer(EmbeddingTransformerBase):
         """
         negative_words = ["de", "het", "tafel", "bord", "automaat", "laptop", "plastic", "whiteboard", "naar", "over",
                           "rapport", "verklaring"]
-        negative_embeddings = [self._get_embedding(word) for word in negative_words]
+        negative_embeddings = [self._get_embedding(word)[0] for word in negative_words]
         return np.mean(negative_embeddings, axis=0)
 
     def _get_embedding(self, text: str) -> np.ndarray:

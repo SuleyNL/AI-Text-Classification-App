@@ -1,6 +1,7 @@
 import abc
 import json
 import os
+import traceback
 from typing import List, Dict, Any
 
 from bs4 import BeautifulSoup
@@ -128,6 +129,7 @@ class AI_solution(abc.ABC):
 
         except Exception as e:
             print(f"An error occurred during document ingestion: {e}")
+            traceback.print_exc()
             raise
 
         finally:

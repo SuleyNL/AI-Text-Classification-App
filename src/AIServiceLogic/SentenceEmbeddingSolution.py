@@ -39,7 +39,7 @@ class SentenceEmbeddingSolution(AI_solution):
         super().__init__()  # pre-fills categories
         self.embedder = EmbeddingFunctions.Mxbai()
 
-        self.embedding_transformer = EmbeddingTransformers.EmptyTransformer2(
+        self.embedding_transformer = EmbeddingTransformers.EmptyTransformer(
             categories=self.categories,
             embedder=self.embedder)
 
