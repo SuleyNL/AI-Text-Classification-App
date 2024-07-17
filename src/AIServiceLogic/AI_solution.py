@@ -98,7 +98,7 @@ class AI_solution(abc.ABC):
 
         This method handles the full lifecycle of document ingestion, from
         saving the document, processing it, to removing the temporary file.
-        # TODO make it a truly temp_file with the tempfile library
+        # TODO make it truly a temp_file using the tempfile library
 
         Args:
             filepath (str): The path where the document will be temporarily saved.

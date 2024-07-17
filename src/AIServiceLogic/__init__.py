@@ -1,2 +1,2 @@
-from .SentenceEmbeddingSolution import SentenceEmbeddingSolution
+from src.AIServiceLogic.SentenceEmbedding.SentenceEmbeddingSolution import SentenceEmbeddingSolution
 SentenceEmbedder = SentenceEmbeddingSolution

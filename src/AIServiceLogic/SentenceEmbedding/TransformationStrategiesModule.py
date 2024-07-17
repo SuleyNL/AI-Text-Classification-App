@@ -12,7 +12,6 @@ class TransformationStrategy(ABC):
     embedder: EmbeddingFunction
     similarity_threshold: int
 
-    @abstractmethod
     def __init__(self, embedder: EmbeddingFunction, categories: List[Dict[str, Any]]):
         self.embedder = embedder
         self.category_embeddings = self._create_category_embeddings(categories)
@@ -21,8 +20,10 @@ class TransformationStrategy(ABC):
     @abstractmethod
     def get_labels(self, sentence: str) -> List[str]:
         """
-        Get relevant categories for a given sentence based on embedding similarity
-        and matrix transformations performed by the embedder.
+        [Mandatory inheritance function]
+
+        Returns relevant categories for a given sentence based on embedding similarity
+        and (optionally) matrix transformations performed by the embedder.
 
         Args:
             sentence (str): The input sentence.
@@ -32,12 +33,16 @@ class TransformationStrategy(ABC):
         """
         pass
 
-    @abstractmethod
     def _get_embedding(self, text: str) -> Embedding:
         return self.embedder([text])[0]
 
-    @abstractmethod
     def _create_category_embeddings(self, categories: List[Dict[str, Any]]) -> dict[str, np.array]:
+        """
+        Embed all categories using their word clouds.
+
+        Returns:
+            Dict[str, List[float]]: A dictionary mapping category names to their embeddings.
+        """
         category_embeddings = {}
         for category in categories:
             category_text = ' '.join(category['wordCloud'])
@@ -52,21 +57,6 @@ class NoTransformation(TransformationStrategy):
     def __init__(self, embedder: EmbeddingFunction, categories):
         super().__init__(embedder, categories)
         self.category_embeddings = self._create_category_embeddings(categories)
-
-    def _create_category_embeddings(self, categories: List[Dict[str, Any]]) -> dict[str, np.array]:
-        """
-        Embed all categories using their word clouds.
-
-        Returns:
-            Dict[str, List[float]]: A dictionary mapping category names to their embeddings.
-        """
-        category_embeddings = {}
-        for category in categories:
-            category_text = ' '.join(category['wordCloud'])
-            response = self.embedder([category_text])
-            embedding = response[0]
-            category_embeddings[category['name']] = np.array(embedding)
-        return category_embeddings
 
     def get_labels(self, sentence: str) -> List[str]:
         sentence_embedding = np.array(self._get_embedding(sentence))
@@ -93,13 +83,14 @@ class NoTransformation(TransformationStrategy):
         return np.dot(sentence_embedding, theme_embedding) / (
                 np.linalg.norm(sentence_embedding) * np.linalg.norm(theme_embedding))
 
-    def _get_embedding(self, text: str) -> Embedding:
-        return self.embedder([text])[0]
-
 
 @deprecated(details="This TransformationStrategy is not ready for production use yet")
 class ThemeTransformation(TransformationStrategy):
-    def __init__(self):
+    def get_labels(self, sentence: str) -> List[str]:
+        pass
+
+    def __init__(self, embedder: EmbeddingFunction, categories: List[Dict[str, Any]]):
+        super().__init__(embedder, categories)
         self.alpha = 0.51
         self.transformation_matrices = self._create_transformation_matrices()
         self.negative_embedding = self._create_negative_embedding()
@@ -124,7 +115,7 @@ class ThemeTransformation(TransformationStrategy):
             theme_name: (1 - self.alpha) * np.eye(len(theme_embedding)) + self.alpha * np.outer(theme_embedding, theme_embedding)
             for theme_name, theme_embedding in self.category_embeddings.items()}
 
-    def _create_category_embeddings(self) -> Dict[str, np.array]:
+    def _create_category_embeddings(self, categories) -> Dict[str, np.array]:
         return {theme['name']: np.mean([self._get_embedding(word)[0] for word in theme['wordCloud']], axis=0)
                 for theme in self.categories}
 

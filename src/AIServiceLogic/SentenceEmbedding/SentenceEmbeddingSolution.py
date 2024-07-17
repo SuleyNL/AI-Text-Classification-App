@@ -4,10 +4,9 @@ from PyPDF2 import PdfReader
 from llama_index.core.node_parser import SentenceSplitter
 from typing import List, Dict, Sequence
 import numpy as np
-from src.AIServiceLogic import EmbeddingFunctions
-from .AI_solution import AI_solution
-from .EmbeddingFunctions import *
-from .EmbeddingTransformers import TransformationStrategies, TransformationStrategy
+from src.AIServiceLogic.AI_solution import AI_solution
+from src.AIServiceLogic.EmbeddingFunctionsModule import EmbeddingFunctions, EmbeddingFunction
+from src.AIServiceLogic.SentenceEmbedding.TransformationStrategiesModule import TransformationStrategies, TransformationStrategy
 
 
 class SentenceEmbeddingSolution(AI_solution):
@@ -23,7 +22,6 @@ class SentenceEmbeddingSolution(AI_solution):
                                            'id', 'name', and 'wordCloud' keys.
         category_embeddings (Dict[str, List[float]]): Embeddings for each category's word cloud.
         embedding_strategy (EmbeddingTransformerBase): Embedder for themes.
-        client (chromadb.Client): ChromaDB client for document storage.
         collection (chromadb.Collection): ChromaDB collection for storing embeddings.
     """
 
@@ -38,17 +36,10 @@ class SentenceEmbeddingSolution(AI_solution):
         # See: https://docs.trychroma.com/guides#changing-the-distance-function for more info.
         """
         super().__init__()  # pre-fills categories
-        self.embedder: EmbeddingFunction = EmbeddingFunctions.Mxbai()
+        self.embedder: EmbeddingFunction = EmbeddingFunctions.Baai()
 
-        self.embedding_strategy = TransformationStrategies.NoTransformation(self.embedder, self.categories)
-
-        self.client = chromadb.Client()
-
-        self.collection = self.client.create_collection(
-            name="docs",
-            metadata={"hnsw:space": "cosine"},
-            embedding_function=self.embedder
-        )
+        self.embedding_strategy: TransformationStrategy = \
+            TransformationStrategies.NoTransformation(self.embedder, self.categories)
 
     def get_relevant_categories_old(self, sentence: str, sentence_embedding: Sequence[float] | Sequence[int]) -> List[str]:
         """
@@ -100,20 +91,11 @@ class SentenceEmbeddingSolution(AI_solution):
         splitter = SentenceSplitter(chunk_size=50, chunk_overlap=5)
         sentences = splitter.split_text(text=text)
 
-        # 2. Embed and store each sentence in ChromaDB collection
+        # 2. Embed and store embed the sentence-categories as classes in span elements in HTML
         doc_html = []
+
+        # TODO: can probably be done in 1 batch, instead of for-loop
         for i, sentence in enumerate(sentences):
-            response = self.embedder([sentence])
-            # TODO: can probably be done in 1 batch, instead of individually each time
-            embedding = response[0]
-
-            self.collection.add(
-                ids=[str(i)],
-                embeddings=[embedding],
-                documents=[sentence],
-                metadatas=[{"filename": filename, "person_id": person_id}]
-            )
-
             # Get relevant categories based on cosine similarity with the wordcloud of the category
             relevant_categories = self.embedding_strategy.get_labels(sentence)
 
@@ -126,7 +108,4 @@ class SentenceEmbeddingSolution(AI_solution):
                 doc_html.append(f'<span class="cat {category_classes_frontend}">{sentence}</span>')
             else:
                 doc_html.append(f'<span>{sentence}</span>')
-
-            print(f"{sentence} stored in db with metadata filename: {filename} and person_id: {person_id}")
-
         return ''.join(doc_html)

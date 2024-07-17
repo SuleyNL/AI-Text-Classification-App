@@ -9,9 +9,11 @@ from flask import Flask, jsonify, request, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
+
+import src.AIServiceLogic.EmbeddingFunctionsModule
 from src.AIServiceLogic import SentenceEmbedder, AI_solution
 
-from models import Base, Person, PersonDoc, Doc, Label, LabelCategory
+from models import Base, Person, PersonDoc, Doc, LabelCategory
 from flask_cors import CORS
 
 """
