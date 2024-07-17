@@ -1,203 +1,150 @@
-from typing import Dict, List, Sequence, Union, Any
-from chromadb import EmbeddingFunction, Embeddings
-
+from typing import Dict, List, Any
 import numpy as np
-from src.AIServiceLogic import EmbeddingFunctions
-from src.AIServiceLogic.EmbeddingTransformerBase import EmbeddingTransformerBase
+from abc import ABC, abstractmethod
+from enum import Enum
+from chromadb import EmbeddingFunction
+from chromadb.api.types import Embedding
+from deprecation import deprecated
 
 
-class EmptyTransformer(EmbeddingTransformerBase):
-    """
-    A class of the type EmbeddingTransformerBase that doesn't modify any embeddings.
+class TransformationStrategy(ABC):
+    category_embeddings: Dict[str, np.array]
+    embedder: EmbeddingFunction
+    similarity_threshold: int
 
-    This class has the same method signatures as a regular EmbeddingTransformerBase but calculates
-    similarities without modifying embeddings.
-
-    Attributes:
-        categories (List[Dict[str, List[str]]]): A list of theme dictionaries.
-        embedder (callable): A function to generate embeddings.
-        theme_embeddings (Dict[str, np.ndarray]): Embeddings for each theme.
-    """
-    def get_sentence_embedding(self, sentence: str) -> np.ndarray:
-        return np.array(self._get_embedding(sentence)[0])
-
-    def _get_embedding(self, text: str) -> Embeddings:
-        return self.embedder([text])
-
-    def __init__(self, categories: List[Dict[str, List[str]]], embedder: EmbeddingFunction = EmbeddingFunctions.Mxbai):
-        """
-        Initialize the EmptyTransformer.
-
-        Args:
-            categories (List[Dict[str, List[str]]]): A list of theme dictionaries.
-            embedder (EmbeddingFunction, optional): A function to generate embeddings.
-        """
-        super().__init__(embedder)
-        self.categories = categories
+    @abstractmethod
+    def __init__(self, embedder: EmbeddingFunction, categories: List[Dict[str, Any]]):
         self.embedder = embedder
-        self.theme_embeddings = self._create_theme_embeddings()
+        self.category_embeddings = self._create_category_embeddings(categories)
+        pass
 
-    def get_category_similarities(self, sentence_embedding: np.ndarray) -> Dict[str, float]:
+    @abstractmethod
+    def get_labels(self, sentence: str) -> List[str]:
         """
-        Calculate similarities between a sentence embedding and all theme embeddings.
+        Get relevant categories for a given sentence based on embedding similarity
+        and matrix transformations performed by the embedder.
 
         Args:
-            sentence_embedding (np.ndarray): The embedding of the input sentence.
+            sentence (str): The input sentence.
 
         Returns:
-            Dict[str, float]: A dictionary mapping theme names to their similarity scores.
+            List[str]: A list of relevant theme names.
         """
-        similarities = {}
-        for theme_name, theme_embedding in self.theme_embeddings.items():
-            similarity = self._cosine_similarity(sentence_embedding, theme_embedding)
-            similarities[theme_name] = similarity
-        return similarities
+        pass
 
-    def _create_theme_embeddings(self) -> dict[str, np.ndarray]:
+    @abstractmethod
+    def _get_embedding(self, text: str) -> Embedding:
+        return self.embedder([text])[0]
+
+    @abstractmethod
+    def _create_category_embeddings(self, categories: List[Dict[str, Any]]) -> dict[str, np.array]:
+        category_embeddings = {}
+        for category in categories:
+            category_text = ' '.join(category['wordCloud'])
+            embedding = self._get_embedding(category_text)
+            category_embeddings[category['name']] = np.array(embedding)
+        return category_embeddings
+
+
+class NoTransformation(TransformationStrategy):
+    similarity_threshold = 0.65
+
+    def __init__(self, embedder: EmbeddingFunction, categories):
+        super().__init__(embedder, categories)
+        self.category_embeddings = self._create_category_embeddings(categories)
+
+    def _create_category_embeddings(self, categories: List[Dict[str, Any]]) -> dict[str, np.array]:
         """
-        Create embeddings for each theme based on its word cloud.
+        Embed all categories using their word clouds.
 
         Returns:
-            dict[str, np.ndarray]: A dictionary mapping theme names to their embeddings.
+            Dict[str, List[float]]: A dictionary mapping category names to their embeddings.
         """
-        theme_embeddings = {}
-        for theme in self.categories:
-            theme_name = theme['name']
-            word_cloud = theme['wordCloud']
-            embeddings = self.embedder(word_cloud)
-            theme_embeddings[theme_name] = np.mean(embeddings, axis=0)
-        print('theme embeddings = ')
-        print(theme_embeddings)
-        return theme_embeddings
+        category_embeddings = {}
+        for category in categories:
+            category_text = ' '.join(category['wordCloud'])
+            response = self.embedder([category_text])
+            embedding = response[0]
+            category_embeddings[category['name']] = np.array(embedding)
+        return category_embeddings
+
+    def get_labels(self, sentence: str) -> List[str]:
+        sentence_embedding = np.array(self._get_embedding(sentence))
+        similarities = self._calculate_sentence_similarity_to_categories(sentence_embedding)
+
+        relevant_categories = []
+        print(f"Sentence: {sentence}")
+        print("Theme similarities:")
+        for theme, similarity in similarities.items():
+            print(f"  {theme}: {similarity:.4f}")
+            if similarity >= self.similarity_threshold:
+                relevant_categories.append(theme)
+
+        print(f"Relevant themes: {relevant_categories}")
+        print("-" * 50)
+
+        return relevant_categories
+
+    def _calculate_sentence_similarity_to_categories(self, sentence_embedding: np.array) -> Dict[str, float]:
+        return {theme_name: self._calculate_similarity(sentence_embedding, theme_embedding)
+                for theme_name, theme_embedding in self.category_embeddings.items()}
+
+    def _calculate_similarity(self, sentence_embedding: np.array, theme_embedding: np.array) -> float:
+        return np.dot(sentence_embedding, theme_embedding) / (
+                np.linalg.norm(sentence_embedding) * np.linalg.norm(theme_embedding))
+
+    def _get_embedding(self, text: str) -> Embedding:
+        return self.embedder([text])[0]
 
 
-class ThemeTransformer(EmbeddingTransformerBase):
-    """
-    A class for embedding themes and comparing sentence embeddings to theme embeddings.
-
-    This class creates embeddings for themes, applies transformation matrices to
-    emphasize theme-specific dimensions, and computes similarities between
-    sentences and themes.
-
-    Attributes:
-        categories (List[Dict[str, List[str]]]): A list of theme dictionaries.
-        theme_embeddings (Dict[str, np.ndarray]): Embeddings for each theme.
-        transformation_matrices (Dict[str, np.ndarray]): Transformation matrices for each theme.
-        negative_embedding (np.ndarray): An embedding representing common, non-theme-specific words.
-        embedder (EmbeddingFunction): An embedding function which transforms text into its vector-representation
-    """
-
-    def __init__(self,
-                 categories: List[Dict[str, List[str]]],
-                 alpha: float = 0.51,
-                 embedder: EmbeddingFunction = EmbeddingFunctions.Mxbai):
-        """
-        Args:
-            categories (List[Dict[str, List[str]]]): A list of theme dictionaries.
-            alpha (float, optional): Weight factor for theme projection matrix. Defaults to 0.51.
-        """
-        super().__init__(embedder)  # Call the parent class constructor with the embedder
-        self.categories = categories
-        self.theme_embeddings = self._create_theme_embeddings()
-        self.transformation_matrices = self._create_transformation_matrices(alpha)
+@deprecated(details="This TransformationStrategy is not ready for production use yet")
+class ThemeTransformation(TransformationStrategy):
+    def __init__(self):
+        self.alpha = 0.51
+        self.transformation_matrices = self._create_transformation_matrices()
         self.negative_embedding = self._create_negative_embedding()
-        self.embedder = embedder
 
-    def get_sentence_embedding(self, sentence: str) -> np.ndarray:
-        """
-        Get the embedding for a given sentence.
+    def transform_embedding(self, embedding: np.array) -> np.array:
+        return embedding - self.negative_embedding
 
-        This method currently returns the raw embedding without subtracting
-        the negative embedding. The subtraction is commented out for potential
-        future experimentation.
+    def transform_similarity(self, sentence_embedding: np.array, theme_embedding: np.array) -> float:
+        theme_name = next(
+            name for name, emb in self.transformation_matrices.items() if np.array_equal(emb, theme_embedding))
+        transformed_sentence_embedding = np.dot(sentence_embedding, self.transformation_matrices[theme_name])
+        return np.dot(transformed_sentence_embedding, theme_embedding) / (
+                np.linalg.norm(transformed_sentence_embedding) * np.linalg.norm(theme_embedding))
 
-        Args:
-            sentence (str): The input sentence to embed.
-
-        Returns:
-            np.ndarray: The embedding of the input sentence.
-        """
-        return self._get_embedding(sentence)[0]  # - self.negative_embedding #TODO: For later experimentation
-
-    def get_category_similarities(self, sentence_embedding: np.ndarray) -> Dict[str, float]:
-        """
-        Calculate similarities between a sentence embedding and all theme embeddings.
-
-        This method applies the theme-specific transformation matrices to the
-        sentence embedding before calculating cosine similarity with each theme.
-
-        Args:
-            sentence_embedding (np.ndarray): The embedding of the input sentence.
-
-        Returns:
-            Dict[str, float]: A dictionary mapping theme names to their similarity scores.
-        """
-        similarities = {}
-        for theme_name, theme_embedding in self.theme_embeddings.items():
-            transformed_sentence_embedding = np.dot(sentence_embedding, self.transformation_matrices[theme_name])
-            similarity = self._cosine_similarity(transformed_sentence_embedding, theme_embedding)
-            similarities[theme_name] = similarity
-        return similarities
-
-    def _create_theme_embeddings(self) -> Dict[str, np.ndarray]:
-        """
-        Create embeddings for each theme based on its word cloud.
-
-        Returns:
-            Dict[str, np.ndarray]: A dictionary mapping theme names to their embeddings.
-        """
-        theme_embeddings = {}
-        for theme in self.categories:
-            theme: dict
-            theme_name: str = theme['name']
-            word_cloud: List[str] = theme['wordCloud']
-            embeddings: List[np.ndarray] = [self._get_embedding(word)[0] for word in word_cloud]
-            theme_embeddings[theme_name]: np.ndarray = np.mean(embeddings, axis=0)
-        return theme_embeddings
-
-    def _create_transformation_matrices(self, alpha: float) -> Dict[str, np.ndarray]:
-        """
-        Create transformation matrices for each theme.
-
-        Args:
-            alpha (float): Weight factor for theme projection matrix.
-
-        Returns:
-            Dict[str, np.ndarray]: A dictionary mapping theme names to their transformation matrices.
-        """
-        transformation_matrices = {}
-        for theme_name, theme_embedding in self.theme_embeddings.items():
-            identity = np.eye(len(theme_embedding))
-            theme_matrix = np.outer(theme_embedding, theme_embedding)
-            matrix = (1 - alpha) * identity + alpha * theme_matrix
-            transformation_matrices[theme_name] = matrix
-        return transformation_matrices
-
-    def _create_negative_embedding(self) -> np.ndarray:
-        """
-        Create an embedding representing common, non-theme-specific words.
-
-        Returns:
-            np.ndarray: The negative embedding.
-        """
+    def _create_negative_embedding(self) -> np.array:
         negative_words = ["de", "het", "tafel", "bord", "automaat", "laptop", "plastic", "whiteboard", "naar", "over",
                           "rapport", "verklaring"]
-        negative_embeddings = [self._get_embedding(word)[0] for word in negative_words]
-        return np.mean(negative_embeddings, axis=0)
+        return np.mean([self._get_embedding(word)[0] for word in negative_words], axis=0)
 
-    def _get_embedding(self, text: str) -> np.ndarray:
-        """
-        Get the embedding for a given text using the mxbai-embed-large model.
+    def _create_transformation_matrices(self) -> Dict[str, np.array]:
+        return {
+            theme_name: (1 - self.alpha) * np.eye(len(theme_embedding)) + self.alpha * np.outer(theme_embedding, theme_embedding)
+            for theme_name, theme_embedding in self.category_embeddings.items()}
 
-        Args:
-            text (str): The input text to embed.
+    def _create_category_embeddings(self) -> Dict[str, np.array]:
+        return {theme['name']: np.mean([self._get_embedding(word)[0] for word in theme['wordCloud']], axis=0)
+                for theme in self.categories}
 
-        Returns:
-            np.ndarray: The embedding of the input text.
-        """
-        # response = ollama.embeddings(model="mxbai-embed-large", prompt=text)
-        # return np.array(response["embedding"])
 
-        response = self.embedder([text])[0]
-        return np.array(response)
+class TransformationStrategies(Enum):
+    ThemeTransformation = ThemeTransformation
+    NoTransformation = NoTransformation
+
+    @classmethod
+    def _missing_(cls, value):
+        raise ValueError(f"{value} is not a valid {cls.__name__}")
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        for name, value in cls.__members__.items():
+            if not issubclass(value.value, TransformationStrategy):
+                raise TypeError(f"{name} must be a subclass of TransformationStrategy")
+
+    def __call__(self, *args, **kwargs) -> TransformationStrategy:
+        return self.value(*args, **kwargs)
+
 

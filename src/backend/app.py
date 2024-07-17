@@ -27,7 +27,6 @@ The API allows users to:
 3. Retrieve documents and their AI-processed content
 4. Manage label categories for document overview
 5. Retrieve categorized snippets from documents
-
 """
 
 # Initialize AI solution
@@ -353,7 +352,7 @@ def get_doc(doc_id: str) -> Tuple[Response, int]:
     }), 200
 
 
-@app.route('/persons/<int:person_id>/docs/test', methods=['GET'])
+@app.route('/persons/<int:person_id>/docs', methods=['GET'])
 def get_person_docs(person_id: int) -> Tuple[Response, int]:
     """
     Retrieves all documents associated with a specific person.
