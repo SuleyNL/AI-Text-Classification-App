@@ -6,22 +6,22 @@ from typing import List, Dict, Sequence
 import numpy as np
 from src.AIServiceLogic.AI_solution import AI_solution
 from src.AIServiceLogic.EmbeddingFunctions.EmbeddingFunctionsModule import EmbeddingFunctions, EmbeddingFunction
+from src.AIServiceLogic.MultiClassification.ClassificationStrategiesModule import ClassificationStrategy, \
+    ClassificationStrategies
 from src.AIServiceLogic.SentenceEmbedding.TransformationStrategiesModule import TransformationStrategies, TransformationStrategy
 
 
-class SentenceEmbeddingSolution(AI_solution):
+class MultiClassificationSolution(AI_solution):
     """
-    A solution for embedding sentences and categorizing document content.
+    A solution for multi-classification solutions to classify each sentence into one of the pre-defined categories.
 
-    This class extends AI_solution to provide functionality for embedding sentences,
-    categorizing them based on similarity to predefined categories, and processing
-    documents to generate labeled HTML output.
+    This class extends AI_solution to provide functionality for multi-label sentence classification,
+    based on predefined categories, and processing documents to generate labeled HTML output.
 
     Attributes:
         categories (List[Dict[str, Any]]): List of category dictionaries, each containing
                                            'id', 'name', and 'wordCloud' keys.
-        category_embeddings (Dict[str, List[float]]): Embeddings for each category's word cloud.
-        embedding_strategy (EmbeddingTransformerBase): Embedder for themes.
+        classification_strategy (EmbeddingTransformerBase): Embedder for themes.
         collection (chromadb.Collection): ChromaDB collection for storing embeddings.
     """
 
@@ -36,10 +36,8 @@ class SentenceEmbeddingSolution(AI_solution):
         # See: https://docs.trychroma.com/guides#changing-the-distance-function for more info.
         """
         super().__init__()  # pre-fills categories
-        self.embedder: EmbeddingFunction = EmbeddingFunctions.Baai()
 
-        self.embedding_strategy: TransformationStrategy = \
-            TransformationStrategies.NoTransformation(self.embedder, self.categories)
+        self.classification_strategy: ClassificationStrategy = ClassificationStrategies.ComprehendIt(self.categories)
 
     def process_document(self, filepath: str, filename: str, person_id: int) -> str:
         """
@@ -68,7 +66,7 @@ class SentenceEmbeddingSolution(AI_solution):
         # TODO: can probably be done in 1 batch, instead of for-loop
         for i, sentence in enumerate(sentences):
             # Get relevant categories based on cosine similarity with the wordcloud of the category
-            relevant_categories = self.embedding_strategy.get_labels(sentence)
+            relevant_categories = self.classification_strategy.get_labels(sentence)
 
             if relevant_categories:
                 # category_classes = ' '.join([category.lower().replace(' ', '_') for category in relevant_categories])
@@ -80,3 +78,5 @@ class SentenceEmbeddingSolution(AI_solution):
             else:
                 doc_html.append(f'<span>{sentence}</span>')
         return ''.join(doc_html)
+
+

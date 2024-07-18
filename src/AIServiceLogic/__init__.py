@@ -1,2 +1,7 @@
 from src.AIServiceLogic.SentenceEmbedding.SentenceEmbeddingSolution import SentenceEmbeddingSolution
+from src.AIServiceLogic.MultiClassification.MultiClassificationSolution import MultiClassificationSolution
+from src.AIServiceLogic.MultiClassification.ClassificationStrategiesModule import ClassificationStrategy, \
+    ClassificationStrategies
+
 SentenceEmbedder = SentenceEmbeddingSolution
+MultiClassifier = MultiClassificationSolution

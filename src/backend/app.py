@@ -1,7 +1,7 @@
 import json
 import os
 import uuid
-from typing import List, Dict, Union, Tuple
+from typing import List, Dict, Tuple
 from urllib.parse import parse_qsl
 
 from bs4 import BeautifulSoup
@@ -10,8 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
 
-import src.AIServiceLogic.EmbeddingFunctionsModule
-from src.AIServiceLogic import SentenceEmbedder, AI_solution
+from src.AIServiceLogic import SentenceEmbedder, AI_solution, MultiClassifier
 
 from models import Base, Person, PersonDoc, Doc, LabelCategory
 from flask_cors import CORS
@@ -32,7 +31,11 @@ The API allows users to:
 """
 
 # Initialize AI solution
-solution: AI_solution = SentenceEmbedder()
+#solution: AI_solution = SentenceEmbedder()
+solution: AI_solution = MultiClassifier()
+r = solution.classification_strategy\
+    .get_labels('I get happy if one day I will see the world and eat food from every country and meet new people')
+print(r)
 
 # Database configuration
 database_file: str = 'sqlite:///database.db'
