@@ -11,6 +11,7 @@ export class DocumentService {
   private categoriesUrl = 'categories/1';
   private snippetsUrl = 'categories/1';
   private documentUrl = 'docs';
+  private uploadUrl = 'upload';
 
   constructor(private http: HttpClient) { }
   // GET request to fetch Categories linked to person id
@@ -41,13 +42,13 @@ export class DocumentService {
 		);
 	}
 
-  // getDocument(id: number): Observable<any | undefined> {
-	// 	return this.getDocuments()
-	// 	  .pipe(
-  //     // tap(data => console.log('All', JSON.stringify(data))),
-	// 		map((documents: any) => documents.find((item: { id: number; }) => item.id === id))
-	// 	  );
-	//   }
+	uploadDocument(formData: any) {
+    return this.http.post(`${this.host}/${this.uploadUrl}`, formData)
+		.pipe(
+			tap(res => console.log(JSON.stringify(res))),
+			catchError(this.handleError)
+		);
+	}
 
   private handleError(err: HttpErrorResponse) {
 		let errorMessage = '';
