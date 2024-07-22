@@ -3,7 +3,7 @@ import { DocumentService } from './document.service';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import categories from '../../api/documents/categories.json';
+import categories from '../../api/documents/personal_categories.json';
 
 @Component({
   selector: 'app-categories-list',

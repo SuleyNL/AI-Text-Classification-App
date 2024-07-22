@@ -7,3 +7,40 @@ h1 {
   font-size: 2rem;
   margin-bottom: 1rem;
 }
+
+.rendered {
+  line-height: 1.8;
+
+  span {
+    margin-right: 5px;
+  }
+
+  .cat {
+    background-color: #e9e9e9;
+  }
+
+  .cat1 {
+    background-color: rgb(230, 70, 70);
+  }
+  .cat2 {
+    background-color: rgb(243, 132, 255);
+  }
+  .cat3 {
+    background-color: rgb(124, 231, 255);
+  }
+  .cat4 {
+    background-color: rgb(159, 165, 255);
+  }
+  .cat5 {
+    background-color: rgb(140, 255, 157);
+  }
+  .cat6 {
+    background-color: rgb(238, 62, 135);
+  }
+  .cat7 {
+    background-color: rgb(251, 255, 129);
+  }
+  .cat8 {
+    background-color: rgb(255, 193, 99);
+  }
+}

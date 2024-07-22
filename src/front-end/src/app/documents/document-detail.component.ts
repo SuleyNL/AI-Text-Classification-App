@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
-import document from '../../api/documents/single_document.json';
+import document from '../../api/documents/single_document1.json';
 
 @Component({
   selector: 'app-document-detail',
@@ -36,7 +36,7 @@ export class DocumentDetailComponent implements OnInit, OnDestroy  {
 			error: err => console.log(err)
     })
     // from json
-    if (this.document.length === 0) {
+    if (!this.document.length) {
       this.document = document;
     }
     this.trustedHtml = this.sanitizer.bypassSecurityTrustHtml(this.document.html);

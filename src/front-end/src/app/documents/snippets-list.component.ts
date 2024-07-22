@@ -4,8 +4,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import snippets from '../../api/documents/snippets.json';
-import { SafeHtmlPipe } from '../shared/safeHtml.pipe'
+import snippets from '../../api/documents/snippets2.json';
+import { SafeHtmlPipe } from '../shared/pipes/safeHtml.pipe'
 
 @Component({
   selector: 'app-snippets-list',

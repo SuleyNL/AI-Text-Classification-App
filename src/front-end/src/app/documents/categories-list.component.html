@@ -1,10 +1,21 @@
-<div>
-  <h1>Categories</h1>
+<div class="categories-list">
+  <h1 class="mb-10">Categories</h1>
   <div class="grid">
-    <div *ngFor="let cat of categories" class="grid-item">
-      <a [routerLink]="['/category', cat.id]" routerLinkActive="active"
-        >{{ cat.name }} ({{ cat.numberOfLinkedSnippets }})
-      </a>
+    <div *ngFor="let cat of categories" class="grid-item hover:bg-gray-100">
+      <p>{{ cat.name }} ({{ cat.numberOfLinkedSnippets }})</p>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="24px"
+        viewBox="0 -960 960 960"
+        width="24px"
+        fill="#000"
+      >
+        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+      </svg>
+      <a [routerLink]="['/category', cat.id]" routerLinkActive="active"></a>
+      <div class="rendered">
+        <div class="cat{{ cat.id }} line"></div>
+      </div>
     </div>
   </div>
 </div>
