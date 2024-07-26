@@ -10,7 +10,7 @@ from deprecation import deprecated
 class TransformationStrategy(ABC):
     category_embeddings: Dict[str, np.array]
     embedder: EmbeddingFunction
-    similarity_threshold: int
+    similarity_threshold: float
 
     def __init__(self, embedder: EmbeddingFunction, categories: List[Dict[str, Any]]):
         self.embedder = embedder

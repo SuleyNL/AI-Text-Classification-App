@@ -8,7 +8,7 @@ from transformers import T5Tokenizer
 
 class ClassificationStrategy(ABC):
     category_list: List
-    similarity_threshold: int
+    similarity_threshold: float
 
     def __init__(self, categories: List[Dict[str, Any]]):
         self.category_list = [category['name'] for category in categories]

@@ -8,8 +8,8 @@ import { Observable, catchError, tap, throwError, map } from "rxjs";
 })
 export class DocumentService {
 	private host = `http://127.0.0.1:8001`;
-  private categoriesUrl = 'categories/1';
-  private snippetsUrl = 'categories/1';
+  private categoriesUrl = 'categories/2';
+  private snippetsUrl = 'categories/2';
   private documentUrl = 'docs';
   private uploadUrl = 'upload';
 

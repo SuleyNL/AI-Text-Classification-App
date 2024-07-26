@@ -1,0 +1,16 @@
+sequenceDiagram
+    participant C as Client
+    participant A as API (Flask)
+    participant S as AI Solution
+    participant D as Database
+
+    C->>A: POST /persons/{person_id}/docs
+    A->>D: Create new Doc entry
+    A->>S: process_document(filepath, filename, person_id)
+    S->>S: Extract text from PDF
+    S->>S: Split text into sentences
+    S->>S: Apply AI strategy (Classification or Embedding)
+    S->>S: Generate HTML with categorized sentences
+    S-->>A: Return processed HTML
+    A->>D: Update Doc with processed HTML
+    A-->>C: Return document details

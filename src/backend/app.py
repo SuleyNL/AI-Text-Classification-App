@@ -31,11 +31,11 @@ The API allows users to:
 """
 
 # Initialize AI solution
-#solution: AI_solution = SentenceEmbedder()
-solution: AI_solution = MultiClassifier()
-r = solution.classification_strategy\
-    .get_labels('I get happy if one day I will see the world and eat food from every country and meet new people')
-print(r)
+solution: AI_solution = SentenceEmbedder()
+#solution: AI_solution = MultiClassifier()
+#r = solution.classification_strategy\
+#    .get_labels('I get happy if one day I will see the world and eat food from every country and meet new people')
+#print(r)
 
 # Database configuration
 database_file: str = 'sqlite:///database.db'
