@@ -115,7 +115,7 @@ in the repository.
 
 1. Clone the repository:
    ```
-   git clone <repository-url>
+   git clone https://github.com/SuleyNL/AI-Text-Classification-App.git
    ```
 
 2. Install python dependencies:

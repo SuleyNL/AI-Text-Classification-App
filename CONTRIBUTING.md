@@ -53,20 +53,47 @@ This includes both subjective measurements of the models accuracy and feasibilit
 
 1. Clone the repository:
    ```
-   git clone <repository-url>
+   git clone https://github.com/SuleyNL/AI-Text-Classification-App.git
    ```
 
-2. Install dependencies:
+2. Install python dependencies:
    ```
    pip install -r requirements.txt
    ```
+   
+3. Set up the backend:
+   ```cmd
+   python -m src.backend.app
+   ```
+   ```output
+   All categories have been successfully created or updated.
+   * Serving Flask app 'app'
+   * Debug mode: on
+   WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+   * Running on all addresses (0.0.0.0)
+   * Running on http://127.0.0.1:8001
+   * Running on http://192.168.178.72:8001
+   Press CTRL+C to quit
+   * Restarting with stat
+   ```
+   
+4. Fill up the database with dummy data:
+   ```
+   python -m src.backend.prefill_database
+   ```
 
-3. Set up the database:
+5. Install the frontend packages:
    ```
-   python -c "from app import db; db.create_all()"
+   cd src/front-end
+   npm install
    ```
-
-4. Run the application:
+6. Run the frontend application:
    ```
-   python app.py
+   npm start
+   ```
+   ```
+   Watch mode enabled. Watching for file changes...
+   NOTE: Raw file sizes do not reflect development server per-request transformations.
+     ➜  Local:   http://localhost:4200/
+     ➜  press h + enter to show help
    ```
