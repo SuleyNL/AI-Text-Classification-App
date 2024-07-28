@@ -150,12 +150,12 @@ For detailed API documentation, please refer to the docstring documentation in [
 We welcome contributions to expand and improve this project. Here are some areas where you can contribute:
 
 1. Implementing new AI solutions
-2. Creating new transformation strategies for the `SentenceEmbeddingSolution`
-3. Developing new classification strategies for the `MultiClassificationSolution`
+2. Creating new transformation strategies for the [`SentenceEmbeddingSolution`](src/AIServiceLogic/SentenceEmbedding)
+3. Developing new classification strategies for the [`MultiClassificationSolution`](src/AIServiceLogic/MultiClassification)
 4. Improving the existing embedding functions
 5. Enhancing documentation and test coverage
 
 Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file for more details on how to contribute.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
