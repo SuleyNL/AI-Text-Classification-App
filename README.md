@@ -73,6 +73,9 @@ sequenceDiagram
 
 ## Database Schema
 #### Schema
+The initial SQL Database design looks like this:
+![Initial](Documentation/Initial_sql_design.png)
+
 Our application uses the following database schema:
 
 ```sql
