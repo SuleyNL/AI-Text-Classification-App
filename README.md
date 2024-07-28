@@ -1,8 +1,12 @@
 # AI-Text-Classification-App
-An app to classify text chunks from documents into pre-defined categories. Allowing the user to jump to the most relevant pieces of information without having to read the whole document.
+An app to classify and highlight text chunks from documents into pre-defined categories. 
+Allowing the reader to find the most relevant snippets of information without having to skim through the entire document. 
+While keeping the option to read the context around the snippet
 
 ## Overview
-This project is a Flask-based API that provides document analysis and categorization functionality using AI techniques. It allows users to manage persons, upload documents, process them using AI, and retrieve categorized snippets based on predefined label categories.
+This project is a Flask-based API that provides document analysis and categorization functionality using AI techniques. 
+It allows users to manage persons, upload documents, process them using AI, and retrieve categorized snippets based on 
+predefined label categories.
 
 ## Features
 - Person management (create, retrieve)
@@ -15,26 +19,27 @@ This project is a Flask-based API that provides document analysis and categoriza
 
 The application follows a modular architecture with the following main components:
 
-1. Flask API (`app.py`)
-2. Database models (`models.py`)
+1. Flask API [`app.py`](src/backend/app.py)
+2. Database models [`models.py`](src/backend/models.py)
 3. AI-Service Logic Modules:
-   - `src/AIServiceLogic/MultiClassification`
-   - `src/AIServiceLogic/SentenceEmbedding`
+   - [`src/AIServiceLogic/MultiClassification`](src/AIServiceLogic/MultiClassification)
+   - [`src/AIServiceLogic/SentenceEmbedding`](src/AIServiceLogic/SentenceEmbedding)
 
 
 The following diagram provides an overview of the project's architecture:
 
-![Project Overview](Documentation/ATCA_overview.png)
+![Project Overview](Documentation/ATCA_overview1.png)
 
 
 ## AI Solutions
 
 The application supports two AI solutions for document processing:
 
-1. `MultiClassificationSolution`: Uses a classification strategy to categorize sentences.
-2. `SentenceEmbeddingSolution`: Uses sentence embeddings and transformation strategies for categorization.
+1. [`MultiClassificationSolution`](src/AIServiceLogic/MultiClassification): Uses a classification strategy to categorize sentences.
+2. [`SentenceEmbeddingSolution`](src/AIServiceLogic/SentenceEmbedding): Uses sentence embeddings and transformation strategies 
+for categorization.
 
-To switch between solutions, modify the initialization in `app.py`:
+To switch between solutions, modify the initialization in [`app.py`](src/backend/app.py):
 
 ```python
 solution: AI_solution = SentenceEmbedder()
@@ -59,7 +64,7 @@ sequenceDiagram
     A->>S: process_document(filepath, filename, person_id)
     S->>S: Extract text from PDF
     S->>S: Split text into sentences
-    S->>S: Apply AI strategy (Classification or Embedding)
+    S->>S: Apply AI Solution (MultiClassification or SentenceEmbedding)
     S->>S: Generate HTML with categorized sentences
     S-->>A: Return processed HTML
     A->>D: Update Doc with processed HTML
@@ -67,7 +72,7 @@ sequenceDiagram
 ```
 
 ## Database Schema
-
+#### Schema
 Our application uses the following database schema:
 
 ```sql
@@ -100,10 +105,11 @@ CREATE TABLE LabelCategory (
 );
 ```
 
-### Models
+#### Models
 
-Our database models are defined in `models.py`.
-For the complete implementation of these models, please refer to the `models.py` file in the repository.
+Our database models are defined in [`models.py`](src/backend/models.py).
+For the complete implementation of these models, please refer to the [`models.py`](src/backend/models.py) file 
+in the repository.
 
 ## Setup and Installation
 
@@ -128,7 +134,6 @@ For the complete implementation of these models, please refer to the `models.py`
    ```
 
 ## API Endpoints
-
 - `/persons`: POST, GET
 - `/persons/<int:person_id>`: GET
 - `/persons/<int:person_id>/docs`: POST, GET
@@ -138,10 +143,10 @@ For the complete implementation of these models, please refer to the `models.py`
 - `/categories/<string:person_id>`: GET
 - `/categories/<int:person_id>/<int:category_id>`: GET
 
-For detailed API documentation, please refer to the inline comments in `app.py`.
+For detailed API documentation, please refer to the docstring documentation in [`app.py`](src/backend/app.py).
+
 
 ## Contributing
-
 We welcome contributions to expand and improve this project. Here are some areas where you can contribute:
 
 1. Implementing new AI solutions
