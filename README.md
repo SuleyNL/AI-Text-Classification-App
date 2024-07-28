@@ -1,12 +1,12 @@
 # AI-Text-Classification-App
 An app to classify and highlight text chunks from documents into pre-defined categories. 
-Allowing the reader to find the most relevant snippets of information without having to skim through the entire document. 
-While keeping the option to read the context around the snippet
+Allowing the reader to find the snippets of text most relevant to his categories without having to skim through the entire document. 
+While maintaining the option to go back to the original source and read the context around the snippet.
 
 ## Overview
-This project is a Flask-based API that provides document analysis and categorization functionality using AI techniques. 
+This project is a Flask-based API with a Angular-based frontend that provides document text-categorization functionality using AI techniques. 
 It allows users to manage persons, upload documents, process them using AI, and retrieve categorized snippets based on 
-predefined label categories.
+use-case-predefined label categories
 
 ## Features
 - Person management (create, retrieve)
