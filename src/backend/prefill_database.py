@@ -55,11 +55,13 @@ def create_dummy_data():
     PERSON_ID = create_dummy_person()
     print(PERSON_ID)
 
-    # Define the directory path using raw string
-    directory_path = r"..\Dummy_Data\John Doe"
+    # Get the directory of the current script
+    script_dir = os.path.dirname(__file__)
+    directory_path = os.path.join(script_dir, '../Dummy_Data/John Doe')
 
     # Use glob to find all .pdf files in the directory
     pdf_files = glob.glob(os.path.join(directory_path, "*.pdf"))
+    print(f'pdf files:  {pdf_files}')
 
     if PERSON_ID:
         for pdf in pdf_files:

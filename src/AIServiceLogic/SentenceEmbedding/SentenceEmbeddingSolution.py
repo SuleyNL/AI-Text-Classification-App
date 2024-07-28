@@ -2,8 +2,7 @@ import chromadb
 from PyPDF2 import PdfReader
 
 from llama_index.core.node_parser import SentenceSplitter
-from typing import List, Dict, Sequence
-import numpy as np
+from typing import List, Dict
 from src.AIServiceLogic.AI_solution import AI_solution
 from src.AIServiceLogic.EmbeddingFunctions.EmbeddingFunctionsModule import EmbeddingFunctions, EmbeddingFunction
 from src.AIServiceLogic.SentenceEmbedding.TransformationStrategiesModule import TransformationStrategies, TransformationStrategy

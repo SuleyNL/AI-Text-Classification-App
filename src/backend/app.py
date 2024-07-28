@@ -9,10 +9,9 @@ from flask import Flask, jsonify, request, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
-
 from src.AIServiceLogic import SentenceEmbedder, AI_solution, MultiClassifier
 
-from models import Base, Person, PersonDoc, Doc, LabelCategory
+from .models import Base, Person, PersonDoc, Doc, LabelCategory
 from flask_cors import CORS
 
 """
@@ -629,7 +628,12 @@ def create_label_categories() -> None:
     """
     session = SessionLocal()
 
-    with open('../Categories.json', 'r') as file:
+    # Get the directory of the current script
+    script_dir = os.path.dirname(__file__)
+    # Construct the path to Categories.json
+    categories_path = os.path.join(script_dir, '../Categories.json')
+
+    with open(categories_path, 'r') as file:
         categories_data = json.load(file)
 
     categories = categories_data.get('categories', [])

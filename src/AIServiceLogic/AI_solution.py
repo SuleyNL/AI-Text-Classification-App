@@ -1,6 +1,7 @@
 import abc
 import json
 import os
+import time
 import traceback
 from typing import List, Dict, Any
 
@@ -28,7 +29,13 @@ class AI_solution(abc.ABC):
         Initialize the AI_solution with a solution name and load categories from a JSON file.
         """
         self.solution_name: str = self.__class__.__name__
-        self.categories: List[Dict[str, Any]] = self.load_categories('../Categories.json')
+
+        # Get the directory of the current script
+        script_dir = os.path.dirname(__file__)
+        # Construct the path to Categories.json
+        categories_path = os.path.join(script_dir, '../Categories.json')
+
+        self.categories: List[Dict[str, Any]] = self.load_categories(categories_path)
 
     @abc.abstractmethod
     def process_document(self, filepath: str, filename: str, person_id: int) -> str:
@@ -107,15 +114,12 @@ class AI_solution(abc.ABC):
             request_data (bytes): The binary content of the document.
 
         Returns:
-            str: The processed document content with category labels.
+            str: The processed document content with category labels in HTML.
 
         Raises:
             Exception: If any error occurs during the ingestion process.
         """
         try:
-            print('REQUEST DATA')
-            print(request_data)
-
             # Ensure the directory exists
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
@@ -123,8 +127,18 @@ class AI_solution(abc.ABC):
             with open(filepath, 'wb') as f:
                 f.write(request_data)
 
+            # Measure time for process_document
+            start_time = time.perf_counter()
+
             # Perform the processing
             document_labeled_text: str = self.process_document(filepath, filename, person_id)
+            end_time = time.perf_counter()
+
+            # Calculate elapsed time
+            elapsed_time = end_time - start_time
+
+            # Log the elapsed time
+            print(f"process_document() execution time using {self.solution_name}: {elapsed_time:.6f} seconds")
             return document_labeled_text
 
         except Exception as e:
